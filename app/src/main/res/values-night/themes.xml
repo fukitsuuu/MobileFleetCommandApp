@@ -1,0 +1,8 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.MobileFleetCommandApp" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/app_bg</item>
+        <item name="android:statusBarColor">@color/topbar_bg</item>
+        <item name="android:navigationBarColor">@color/topbar_bg</item>
+    </style>
+</resources>

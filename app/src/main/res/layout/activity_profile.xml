@@ -1,0 +1,497 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/drawerLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
+
+    <!-- Main Content -->
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#F3F4F6"
+        android:fitsSystemWindows="true">
+
+        <!-- Custom Top Bar -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:background="@color/topbar_bg"
+            android:paddingTop="8dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
+
+            <!-- Hamburger Menu Icon - Left -->
+            <ImageView
+                android:id="@+id/hamburgerMenu"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_menu"
+                android:contentDescription="Menu"
+                android:tint="#FFFFFF"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"/>
+
+            <!-- Logo - Center -->
+            <ImageView
+                android:id="@+id/logo"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:src="@drawable/logo"
+                android:contentDescription="@string/app_name"
+                android:layout_marginLeft="40dp"/>
+
+            <!-- Bell Icon - Right side -->
+            <ImageView
+                android:id="@+id/notifications"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_bell"
+                android:contentDescription="Notifications"
+                android:tint="#FFFFFF"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="65dp"/>
+
+            <!-- Message Icon - Far Right -->
+            <ImageView
+                android:id="@+id/messageIcon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_message"
+                android:contentDescription="Messages"
+                android:tint="#FFFFFF"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="16dp"/>
+
+        </RelativeLayout>
+
+        <!-- Page Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@android:color/white"
+            android:elevation="2dp"
+            android:padding="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Profile"
+                android:textColor="#0F172A"
+                android:textSize="24sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Welcome to your profile management"
+                android:textColor="#64748B"
+                android:textSize="14sp"
+                android:layout_marginTop="4dp"/>
+
+        </LinearLayout>
+
+        <!-- Main content container -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:padding="16dp">
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@android:color/white"
+                        android:elevation="2dp"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Driver ID"
+                            android:textColor="#64748B"
+                            android:textSize="12sp"/>
+                        <EditText
+                            android:id="@+id/pf_driver_id"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@android:color/white"
+                            android:focusable="false"
+                            android:cursorVisible="false"
+                            android:padding="12dp"
+                            android:textColor="#0F172A"
+                            android:textSize="14sp"
+                            android:enabled="false"/>
+
+                        
+                    </LinearLayout>
+
+                    <View android:layout_width="match_parent" android:layout_height="16dp"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@android:color/white"
+                        android:elevation="2dp"
+                        android:padding="16dp">
+                        <ImageView
+                            android:id="@+id/pf_driver_image"
+                            android:layout_width="200dp"
+                            android:layout_height="200dp"
+                            android:layout_gravity="center_horizontal"
+                            android:scaleType="centerCrop"
+                            android:src="@drawable/circle_background"/>
+                    </LinearLayout>
+
+                    <View android:layout_width="match_parent" android:layout_height="16dp"/>
+
+                    <!-- Names -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@android:color/white"
+                        android:elevation="2dp"
+                        android:padding="16dp">
+                        <TextView
+                            android:text="First Name"
+                            android:textColor="#64748B"
+                            android:textSize="12sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+                        <EditText
+                            android:id="@+id/pf_first_name"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@android:color/white"
+                            android:focusable="false"
+                            android:cursorVisible="false"
+                            android:padding="12dp"
+                            android:textColor="#0F172A"
+                            android:textSize="14sp"
+                            android:enabled="false"/>
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="12dp"/>
+                        <TextView
+                            android:text="Middle Name"
+                            android:textColor="#64748B"
+                            android:textSize="12sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+                        <EditText
+                            android:id="@+id/pf_middle_name"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@android:color/white"
+                            android:focusable="false"
+                            android:cursorVisible="false"
+                            android:padding="12dp"
+                            android:textColor="#0F172A"
+                            android:textSize="14sp"
+                            android:enabled="false"/>
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="12dp"/>
+                        <TextView
+                            android:text="Last Name"
+                            android:textColor="#64748B"
+                            android:textSize="12sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+                        <EditText
+                            android:id="@+id/pf_last_name"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@android:color/white"
+                            android:focusable="false"
+                            android:cursorVisible="false"
+                            android:padding="12dp"
+                            android:textColor="#0F172A"
+                            android:textSize="14sp"
+                            android:enabled="false"/>
+                    </LinearLayout>
+
+                    <View android:layout_width="match_parent" android:layout_height="16dp"/>
+
+                    <!-- Birth/Gender -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@android:color/white"
+                        android:elevation="2dp"
+                        android:padding="16dp">
+                        <TextView
+                            android:text="Birth Date"
+                            android:textColor="#64748B"
+                            android:textSize="12sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+                        <EditText
+                            android:id="@+id/pf_birth_date"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@android:color/white"
+                            android:focusable="false"
+                            android:cursorVisible="false"
+                            android:padding="12dp"
+                            android:textColor="#0F172A"
+                            android:textSize="14sp"
+                            android:enabled="false"/>
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="12dp"/>
+                        <TextView
+                            android:text="Gender"
+                            android:textColor="#64748B"
+                            android:textSize="12sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+                        <EditText
+                            android:id="@+id/pf_gender"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@android:color/white"
+                            android:focusable="false"
+                            android:cursorVisible="false"
+                            android:padding="12dp"
+                            android:textColor="#0F172A"
+                            android:textSize="14sp"
+                            android:enabled="false"/>
+                    </LinearLayout>
+
+                    <View android:layout_width="match_parent" android:layout_height="16dp"/>
+
+                    <!-- Contact/Email/Address -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@android:color/white"
+                        android:elevation="2dp"
+                        android:padding="16dp">
+                        <TextView
+                            android:text="Contact Number"
+                            android:textColor="#64748B"
+                            android:textSize="12sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+                        <EditText
+                            android:id="@+id/pf_contact"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@android:color/white"
+                            android:focusable="false"
+                            android:cursorVisible="false"
+                            android:padding="12dp"
+                            android:textColor="#0F172A"
+                            android:textSize="14sp"
+                            android:enabled="false"/>
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="12dp"/>
+                        <TextView
+                            android:text="Address"
+                            android:textColor="#64748B"
+                            android:textSize="12sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+                        <EditText
+                            android:id="@+id/pf_address"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:minLines="3"
+                            android:gravity="top|start"
+                            android:background="@android:color/white"
+                            android:focusable="false"
+                            android:cursorVisible="false"
+                            android:padding="12dp"
+                            android:textColor="#0F172A"
+                            android:textSize="14sp"
+                            android:enabled="false"/>
+                    </LinearLayout>
+
+                    <View android:layout_width="match_parent" android:layout_height="16dp"/>
+
+                    <!-- License -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@android:color/white"
+                        android:elevation="2dp"
+                        android:padding="16dp">
+                        <TextView
+                            android:text="License Number"
+                            android:textColor="#64748B"
+                            android:textSize="12sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+                        <EditText
+                            android:id="@+id/pf_license_number"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@android:color/white"
+                            android:focusable="false"
+                            android:cursorVisible="false"
+                            android:padding="12dp"
+                            android:textColor="#0F172A"
+                            android:textSize="14sp"
+                            android:enabled="false"/>
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="12dp"/>
+                        <TextView
+                            android:text="License Issued"
+                            android:textColor="#64748B"
+                            android:textSize="12sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+                        <EditText
+                            android:id="@+id/pf_license_issued"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@android:color/white"
+                            android:focusable="false"
+                            android:cursorVisible="false"
+                            android:padding="12dp"
+                            android:textColor="#0F172A"
+                            android:textSize="14sp"
+                            android:enabled="false"/>
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="12dp"/>
+                        <TextView
+                            android:text="License Expiry"
+                            android:textColor="#64748B"
+                            android:textSize="12sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+                        <EditText
+                            android:id="@+id/pf_license_expiry"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@android:color/white"
+                            android:focusable="false"
+                            android:cursorVisible="false"
+                            android:padding="12dp"
+                            android:textColor="#0F172A"
+                            android:textSize="14sp"
+                            android:enabled="false"/>
+                    </LinearLayout>
+
+                    <View android:layout_width="match_parent" android:layout_height="16dp"/>
+
+                    <!-- Emergency -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:background="@android:color/white"
+                        android:elevation="2dp"
+                        android:padding="16dp">
+                        <TextView
+                            android:text="Emergency Contact Name"
+                            android:textColor="#64748B"
+                            android:textSize="12sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+                        <EditText
+                            android:id="@+id/pf_emergency_name"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@android:color/white"
+                            android:focusable="false"
+                            android:cursorVisible="false"
+                            android:padding="12dp"
+                            android:textColor="#0F172A"
+                            android:textSize="14sp"
+                            android:enabled="false"/>
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="12dp"/>
+                        <TextView
+                            android:text="Emergency Contact Number"
+                            android:textColor="#64748B"
+                            android:textSize="12sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+                        <EditText
+                            android:id="@+id/pf_emergency_number"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@android:color/white"
+                            android:focusable="false"
+                            android:cursorVisible="false"
+                            android:padding="12dp"
+                            android:textColor="#0F172A"
+                            android:textSize="14sp"
+                            android:enabled="false"/>
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="12dp"/>
+                        <TextView
+                            android:text="Blood Type"
+                            android:textColor="#64748B"
+                            android:textSize="12sp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"/>
+                        <EditText
+                            android:id="@+id/pf_blood_type"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@android:color/white"
+                            android:focusable="false"
+                            android:cursorVisible="false"
+                            android:padding="12dp"
+                            android:textColor="#0F172A"
+                            android:textSize="14sp"
+                            android:enabled="false"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </ScrollView>
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <!-- Navigation Drawer (Sidebar) -->
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/navigationView"
+        android:layout_width="250dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:paddingTop="100dp"
+        android:background="@color/topbar_bg"
+        app:itemTextColor="#FFFFFF"
+        app:itemIconTint="#FFFFFF"
+        app:itemIconSize="24dp"
+        app:headerLayout="@layout/nav_header"
+        app:menu="@menu/drawer_menu"/>
+
+</androidx.drawerlayout.widget.DrawerLayout>

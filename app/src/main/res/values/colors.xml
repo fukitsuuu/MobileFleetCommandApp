@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="navy_icon_bg">#0B1538</color>
+    <color name="input_text">#0F172A</color>
+    <color name="input_hint">#64748B</color>
+    <color name="topbar_bg">#101828</color>
+    
+    <!-- App background to avoid black flash -->
+    <color name="app_bg">#F3F4F6</color>
+    
+    <!-- Maintenance button colors -->
+    <color name="button_cancel_bg">#374151</color>
+    <color name="button_scheduled_bg">#3B82F6</color>
+    <color name="button_in_progress_bg">#6366F1</color>
+    <color name="button_complete_bg">#10B981</color>
+    <color name="button_cancel_text">#FFFFFF</color>
+    <color name="button_white_text">#FFFFFF</color>
+</resources>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="1080dp"
+    android:height="1920dp"
+    android:viewportWidth="1080"
+    android:viewportHeight="1920">
+
+    <!-- broad soft glow on right side -->
+    <path
+        android:fillColor="#22FFFFFF"
+        android:pathData="M1080,0 L1080,1920 L540,1920 C860,1480 860,440 540,0 Z"/>
+
+    <!-- larger diagonal wedge -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M1080,0 L1080,980 L760,1200 L1080,1200 Z"/>
+
+    <!-- stronger bottom soft light -->
+    <path
+        android:fillColor="#12FFFFFF"
+        android:pathData="M0,1580 C360,1760 720,1760 1080,1580 L1080,1920 L0,1920 Z"/>
+</vector>
+
+

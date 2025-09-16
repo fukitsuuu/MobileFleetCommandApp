@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trip Map</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+    
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        #map {
+            width: 100%;
+            height: 100vh;
+            background: #f0f0f0;
+        }
+        .map-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            padding: 5px;
+        }
+        .map-controls button {
+            display: block;
+            width: 30px;
+            height: 30px;
+            margin: 2px;
+            border: none;
+            background: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .map-controls button:hover {
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <script>
+        // ---------- Lightweight caches (persisted) ----------
+        var GEO_CACHE_KEY = 'vrds_geo_cache_v1';
+        var ROUTE_CACHE_KEY = 'vrds_route_cache_v1';
+        function readCache(key){ try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch(_) { return {}; } }
+        function writeCache(key, obj){ try { localStorage.setItem(key, JSON.stringify(obj)); } catch(_){} }
+        var geoCache = readCache(GEO_CACHE_KEY);
+        var routeCache = readCache(ROUTE_CACHE_KEY);
+        
+        // Philippines bounds (extended like VRDS-1.2.php)
+        var philippinesBounds = L.latLngBounds(
+            [3.1, 115.0],  // Southwest (reduced southern coverage)
+            [22.5, 129.5]  // Northeast (extended north and east)
+        );
+        
+        // Initialize map centered on Philippines
+        var map = L.map('map', {
+            maxBounds: philippinesBounds,
+            maxBoundsViscosity: 1.0,
+            minZoom: 4.5,
+            maxZoom: 18,
+            zoomSnap: 0.5,
+            zoomDelta: 0.5,
+            wheelPxPerZoomLevel: 60,
+            tap: false,
+            bounceAtZoomLimits: false,
+            zoomControl: true,
+            dragging: true,
+            scrollWheelZoom: true,
+            doubleClickZoom: true,
+            boxZoom: true,
+            keyboard: true,
+            touchZoom: true
+        }).setView([14.5995, 120.9842], 6); // Center on Philippines
+        
+        console.log('Map initialized successfully');
+        
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        console.log('OpenStreetMap tiles added to map');
+        
+        // Global variables for markers and route
+        var markers = [];
+        var points = [];
+        var currentRoute = null;
+        
+        // Custom icons
+        var pinIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+        
+        // Vehicle icon (SVG data URI) for the first point
+        var vehicleSvg = encodeURIComponent(`
+            <svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 64 64'>
+              <defs>
+                <linearGradient id='gBody' x1='0' x2='1' y1='0' y2='1'>
+                  <stop offset='0%' stop-color='#86efac'/>
+                  <stop offset='100%' stop-color='#065f46'/>
+                </linearGradient>
+                <radialGradient id='gWheel' cx='50%' cy='50%' r='50%'>
+                  <stop offset='0%' stop-color='#f3f4f6'/>
+                  <stop offset='60%' stop-color='#9ca3af'/>
+                  <stop offset='100%' stop-color='#111827'/>
+                </radialGradient>
+                <linearGradient id='gGlass' x1='0' x2='0' y1='0' y2='1'>
+                  <stop offset='0%' stop-color='#e0f2fe' stop-opacity='0.95'/>
+                  <stop offset='100%' stop-color='#93c5fd' stop-opacity='0.9'/>
+                </linearGradient>
+              </defs>
+              <ellipse cx='32' cy='56' rx='18' ry='6' fill='rgba(0,0,0,0.25)'/>
+              <path d='M8 40v6c0 1.1.9 2 2 2h4a7 7 0 0 0 14 0h16a7 7 0 0 0 14 0h2c1.1 0 2-.9 2-2v-7.5c0-2.5-2-4.5-4.5-4.5H52l-6.2-11c-1.1-2-3.3-3.5-5.7-3.5H24c-2.4 0-4.6 1.4-5.7 3.5L14 34H10c-1.1 0-2 .9-2 2z' fill='url(#gBody)' stroke='#0f172a' stroke-width='1'/>
+              <path d='M44.5 24h5c1.1 0 2.1.6 2.6 1.6L54 30h-9.5V24z' fill='#065f46' opacity='0.35'/>
+              <rect x='24' y='24' width='16' height='8' rx='2' fill='url(#gGlass)' stroke='#1d4ed8' stroke-opacity='0.3'/>
+              <circle cx='22' cy='48' r='6.5' fill='url(#gWheel)'/>
+              <circle cx='48' cy='48' r='6.5' fill='url(#gWheel)'/>
+              <circle cx='22' cy='48' r='2' fill='#111827'/>
+              <circle cx='48' cy='48' r='2' fill='#111827'/>
+              <path d='M18 38h28' stroke='rgba(255,255,255,0.35)' stroke-width='2' stroke-linecap='round'/>
+            </svg>`);
+        var vehicleIcon = L.icon({
+            iconUrl: `data:image/svg+xml;charset=UTF-8,${vehicleSvg}`,
+            iconSize: [32, 32],
+            iconAnchor: [16, 28],
+            popupAnchor: [0, -28]
+        });
+        
+        // Function to add marker
+        function addMarker(lat, lng, label, isFirst) {
+            console.log('Adding marker:', lat, lng, 'Label:', label, 'isFirst:', isFirst);
+            var icon = isFirst ? vehicleIcon : pinIcon;
+            var marker = L.marker([lat, lng], { 
+                draggable: false, 
+                icon: icon 
+            });
+            
+            if (label) {
+                marker.bindPopup('<b>' + (isFirst ? 'Vehicle Location' : 'Stop ' + (markers.length)) + '</b><br>' + label);
+            }
+            
+            marker.addTo(map);
+            markers.push(marker);
+            points.push([lat, lng]);
+            
+            console.log('Marker added successfully. Total markers:', markers.length, 'Total points:', points.length);
+            return marker;
+        }
+        
+        // Function to clear map
+        function clearMap() {
+            console.log('clearMap called. Clearing', markers.length, 'markers and', points.length, 'points');
+            
+            // Remove all markers
+            markers.forEach(function(marker) {
+                map.removeLayer(marker);
+            });
+            markers = [];
+            points = [];
+            
+            // Remove route
+            if (currentRoute) {
+                map.removeLayer(currentRoute);
+                currentRoute = null;
+            }
+            
+            // Reset map view
+            map.setView([14.5995, 120.9842], 6);
+            console.log('Map cleared and reset to default view');
+        }
+        
+        // Function to fit bounds to markers
+        function fitBounds() {
+            console.log('fitBounds called. Markers count:', markers.length);
+            if (markers.length > 0) {
+                var group = L.featureGroup(markers);
+                try {
+                    var bounds = group.getBounds();
+                    console.log('Calculated bounds:', bounds);
+                    
+                    // Ensure bounds are within Philippines limits
+                    var limitedBounds = L.latLngBounds([
+                        [Math.max(3.1, bounds.getSouth()), Math.max(115.0, bounds.getWest())],
+                        [Math.min(22.5, bounds.getNorth()), Math.min(129.5, bounds.getEast())]
+                    ]);
+                    console.log('Limited bounds:', limitedBounds);
+                    
+                    map.fitBounds(limitedBounds, { 
+                        padding: [20, 20],
+                        maxZoom: 10
+                    });
+                    console.log('Map bounds fitted');
+                    
+                    // Zoom out slightly after fitting bounds for better overview
+                    setTimeout(function() {
+                        var currentZoom = map.getZoom();
+                        console.log('Current zoom after fitting bounds:', currentZoom);
+                        if (currentZoom > 6) {
+                            map.setZoom(currentZoom - 0.5);
+                            console.log('Zoomed out to:', currentZoom - 0.5);
+                        }
+                    }, 300);
+                } catch(e) {
+                    console.log('Error fitting bounds:', e.message);
+                }
+            } else {
+                console.log('No markers to fit bounds to');
+            }
+        }
+        
+        // Function to draw route (fast single request with robust fallbacks)
+        function drawRoute() {
+            if (points.length < 2) return;
+
+            // De-duplicate near-identical consecutive points (~30m)
+            var filtered = [];
+            var last = null;
+            for (var i = 0; i < points.length; i++) {
+                var p = points[i];
+                if (!last) { filtered.push(p); last = p; continue; }
+                var dx = p[0] - last[0];
+                var dy = p[1] - last[1];
+                if ((dx*dx + dy*dy) > 0.0000009) { filtered.push(p); last = p; }
+            }
+            if (filtered.length < 2) return;
+
+            // Clear any existing route
+            if (currentRoute) { map.removeLayer(currentRoute); currentRoute = null; }
+
+            // Route cache key based on filtered points
+            var routeKey = filtered.map(function(p){ return p[0].toFixed(5)+','+p[1].toFixed(5); }).join('>');
+            var cached = routeCache[routeKey];
+            if (cached && cached.type === 'geojson' && cached.data) {
+                currentRoute = L.geoJSON(cached.data, { style: { color: '#2563eb', weight: 4 } }).addTo(map);
+                return;
+            } else if (cached && cached.type === 'polyline' && Array.isArray(cached.data)) {
+                currentRoute = L.polyline(cached.data, { color: '#2563eb', weight: 3 }).addTo(map);
+                return;
+            }
+
+            // Build OSRM single request with radiuses to improve snapping
+            var coords = filtered.map(function(p){ return [Number(p[0].toFixed(5)), Number(p[1].toFixed(5))]; });
+            var coordStr = coords.map(function(p){ return p[1] + ',' + p[0]; }).join(';'); // lon,lat
+            var radiuses = new Array(coords.length).fill(75).join(';'); // 75m snapping radius
+
+            function requestRoute(overview) {
+                var base = 'https://router.project-osrm.org/route/v1/driving/';
+                var url = base + coordStr + '?alternatives=false&geometries=geojson&steps=false&continue_straight=true&overview=' + overview + '&radiuses=' + radiuses;
+                return fetch(url).then(function(r){ return r.json(); });
+            }
+
+            // Try full overview first (better geometry); fallback to simplified; final fallback: straight polyline
+            requestRoute('full').then(function(j){
+                if (j && j.routes && j.routes[0] && j.routes[0].geometry) {
+                    currentRoute = L.geoJSON(j.routes[0].geometry, { style: { color: '#2563eb', weight: 4 } }).addTo(map);
+                    routeCache[routeKey] = { type: 'geojson', data: j.routes[0].geometry }; writeCache(ROUTE_CACHE_KEY, routeCache);
+                } else {
+                    // Fallback simplified
+                    requestRoute('simplified').then(function(j2){
+                        if (j2 && j2.routes && j2.routes[0] && j2.routes[0].geometry) {
+                            currentRoute = L.geoJSON(j2.routes[0].geometry, { style: { color: '#2563eb', weight: 4 } }).addTo(map);
+                            routeCache[routeKey] = { type: 'geojson', data: j2.routes[0].geometry }; writeCache(ROUTE_CACHE_KEY, routeCache);
+                        } else {
+                            // Final fallback: draw straight polyline between points
+                            currentRoute = L.polyline(filtered, { color: '#2563eb', weight: 3 }).addTo(map);
+                            routeCache[routeKey] = { type: 'polyline', data: filtered }; writeCache(ROUTE_CACHE_KEY, routeCache);
+                        }
+                    }).catch(function(){
+                        currentRoute = L.polyline(filtered, { color: '#2563eb', weight: 3 }).addTo(map);
+                        routeCache[routeKey] = { type: 'polyline', data: filtered }; writeCache(ROUTE_CACHE_KEY, routeCache);
+                    });
+                }
+            }).catch(function(){
+                // Network error fallback: straight line
+                currentRoute = L.polyline(filtered, { color: '#2563eb', weight: 3 }).addTo(map);
+                routeCache[routeKey] = { type: 'polyline', data: filtered }; writeCache(ROUTE_CACHE_KEY, routeCache);
+            });
+        }
+        
+        // Resolve a single address to coordinates (Promise), preserving original index, with cache
+        function geocodeAddressPromise(address, index) {
+            // If exact cached
+            if (geoCache[address]) {
+                var c = geoCache[address];
+                return Promise.resolve({ index: index, lat: c.lat, lng: c.lng, label: address });
+            }
+            // If address already looks like coordinates, cache + return
+            var m = address.match(/(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/);
+            if (m) {
+                var result = { index: index, lat: parseFloat(m[1]), lng: parseFloat(m[2]), label: address };
+                geoCache[address] = { lat: result.lat, lng: result.lng };
+                writeCache(GEO_CACHE_KEY, geoCache);
+                return Promise.resolve(result);
+            }
+            var url = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(address + ', Philippines') + '&limit=1&countrycodes=ph&viewbox=115.0,22.5,129.5,3.1&bounded=1';
+            return fetch(url)
+                .then(function(r){ return r.json(); })
+                .then(function(data){
+                    if (Array.isArray(data) && data.length > 0) {
+                        var res = { index: index, lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), label: address };
+                        geoCache[address] = { lat: res.lat, lng: res.lng }; writeCache(GEO_CACHE_KEY, geoCache);
+                        return res;
+                    }
+                    var broaderUrl = 'https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(address) + '&limit=1';
+                    return fetch(broaderUrl).then(function(rb){ return rb.json(); }).then(function(db){
+                        if (Array.isArray(db) && db.length > 0) {
+                            var res2 = { index: index, lat: parseFloat(db[0].lat), lng: parseFloat(db[0].lon), label: address };
+                            geoCache[address] = { lat: res2.lat, lng: res2.lng }; writeCache(GEO_CACHE_KEY, geoCache);
+                            return res2;
+                        }
+                        return { index: index, lat: NaN, lng: NaN, label: address };
+                    });
+                })
+                .catch(function(){ return { index: index, lat: NaN, lng: NaN, label: address }; });
+        }
+
+        // Resolve all addresses to coordinates in original order
+        function resolveAddresses(addresses) {
+            var promises = addresses.map(function(addr, idx){ return geocodeAddressPromise(addr, idx); });
+            return Promise.all(promises).then(function(results){
+                // Sort by original index to keep order stable
+                results.sort(function(a,b){ return a.index - b.index; });
+                // Filter out failures (NaN)
+                return results.filter(function(r){ return isFinite(r.lat) && isFinite(r.lng); });
+            });
+        }
+
+        // Function to update map with multiple addresses (ordered, then route)
+        function updateMapWithAddresses(addresses) {
+            if (!addresses || addresses.length === 0) return;
+            // Resolve all, then draw in order to avoid race conditions that cause wrong routing
+            resolveAddresses(addresses).then(function(ordered){
+                if (ordered.length === 0) return;
+                clearMap();
+                // Add markers in the resolved, original order
+                ordered.forEach(function(p, i){ addMarker(p.lat, p.lng, p.label, i === 0); });
+                // Draw route after all markers are added
+                drawRoute();
+                // Fit after small delay
+                setTimeout(fitBounds, 300);
+            });
+        }
+        
+        // Legacy function for single location (maintains backward compatibility)
+        function updateMap(location, coordinates) {
+            console.log('updateMap called with location:', location, 'coordinates:', coordinates);
+            if (coordinates && coordinates.lat && coordinates.lng) {
+                console.log('Using provided coordinates');
+                clearMap();
+                addMarker(coordinates.lat, coordinates.lng, location, true);
+                map.setView([coordinates.lat, coordinates.lng], 13);
+            } else {
+                console.log('No coordinates provided, treating as single address');
+                // If no coordinates, treat as single address
+                updateMapWithAddresses([location]);
+            }
+        }
+        
+        // Listen for messages from Android
+        function receiveMessage(message) {
+            console.log('Received message from Android:', message);
+            console.log('Message type:', message.type);
+            console.log('Message addresses:', message.addresses);
+            console.log('Message location:', message.location);
+            
+            if (message.type === 'updateMap') {
+                if (message.addresses && Array.isArray(message.addresses)) {
+                    console.log('Processing multiple addresses:', message.addresses);
+                    console.log('Addresses array length:', message.addresses.length);
+                    // Multiple addresses
+                    updateMapWithAddresses(message.addresses);
+                } else if (message.location) {
+                    console.log('Processing single location:', message.location);
+                    // Single location (legacy)
+                updateMap(message.location, message.coordinates);
+                } else {
+                    console.log('Invalid message format:', message);
+                }
+            } else {
+                console.log('Unknown message type:', message.type);
+            }
+        }
+        
+        // Expose functions to Android
+        window.receiveMessage = receiveMessage;
+        window.updateMapWithAddresses = updateMapWithAddresses;
+        window.clearMap = clearMap;
+        window.fitBounds = fitBounds;
+        
+        // Test function to manually test map functionality
+        window.testMapFunctionality = function() {
+            console.log('Testing map functionality with sample addresses');
+            var testAddresses = [
+                'Manila, Philippines',
+                'Quezon City, Philippines',
+                'Makati, Philippines'
+            ];
+            updateMapWithAddresses(testAddresses);
+        };
+        
+        // Simple test function to add a marker directly
+        window.addTestMarker = function() {
+            console.log('Adding test marker at Manila coordinates');
+            addMarker(14.5995, 120.9842, 'Test Marker - Manila', true);
+            console.log('Test marker added. Total markers:', markers.length);
+        };
+        
+        // Log that the page is ready
+        console.log('Map page loaded and ready to receive messages from Android');
+        console.log('Test functions available:');
+        console.log('- window.testMapFunctionality() - Test with sample addresses');
+        console.log('- window.addTestMarker() - Add a single test marker');
+        console.log('- window.clearMap() - Clear all markers and routes');
+        console.log('- window.fitBounds() - Fit map to show all markers');
+        
+        // Map is ready - no automatic test marker needed
+        console.log('Map initialization complete - ready for trip addresses');
+    </script>
+</body>
+</html>

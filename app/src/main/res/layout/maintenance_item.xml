@@ -1,0 +1,528 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="@android:color/white"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+    <!-- Header Row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="12dp">
+
+        <!-- Maintenance ID -->
+        <TextView
+            android:id="@+id/maintenanceIdText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="MIDN-1000000"
+            android:textColor="#0F172A"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <!-- Status Badge -->
+        <TextView
+            android:id="@+id/statusText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pending"
+            android:textColor="@android:color/holo_orange_dark"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:background="@drawable/status_badge_background"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp" />
+
+    </LinearLayout>
+
+    <!-- Date Added -->
+    <TextView
+        android:id="@+id/dateAddedText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="2024-01-10"
+        android:textColor="#374151"
+        android:textSize="14sp"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Vehicle Name -->
+    <TextView
+        android:id="@+id/vehicleNameText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Toyota HILUX G"
+        android:textColor="#374151"
+        android:textSize="14sp"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Details Row -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="8dp">
+
+        <!-- Vehicle ID -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Vehicle"
+                android:textColor="#6B7280"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/vehicleIdText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="VIDN-1000000"
+                android:textColor="#374151"
+                android:textSize="13sp" />
+
+        </LinearLayout>
+
+        <!-- License Plate -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="License Plate"
+                android:textColor="#6B7280"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/licensePlateText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ABC-1234"
+                android:textColor="#374151"
+                android:textSize="13sp" />
+
+        </LinearLayout>
+
+        <!-- Color -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Color"
+                android:textColor="#6B7280"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/colorText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="White"
+                android:textColor="#374151"
+                android:textSize="13sp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+    <!-- Dropdown Content (Hidden by default) -->
+    <LinearLayout
+        android:id="@+id/dropdownContent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/update_area_background"
+        android:padding="16dp"
+        android:layout_marginTop="12dp"
+        android:visibility="gone">
+
+        <!-- Description Field -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Description *"
+                android:textSize="14sp"
+                android:textColor="#0F172A"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <EditText
+                android:id="@+id/descriptionEditText"
+                android:layout_width="match_parent"
+                android:layout_height="100dp"
+                android:hint="Enter maintenance description..."
+                android:background="@drawable/edittext_border_background"
+                android:padding="12dp"
+                android:minLines="1"
+                android:maxLines="3"
+                android:gravity="top"
+                android:inputType="textMultiLine"
+                android:textSize="14sp"
+                android:textColor="#374151"
+                android:textColorHint="#6B7280" />
+
+        </LinearLayout>
+
+        <!-- Service Type Dropdown -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Service Type *"
+                android:textSize="14sp"
+                android:textColor="#0F172A"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Select service type"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                app:boxStrokeWidth="1dp"
+                app:boxStrokeColor="#D1D5DB">
+
+                <AutoCompleteTextView
+                    android:id="@+id/serviceTypeDropdown"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:inputType="none"
+                    android:focusable="false"
+                    android:textSize="14sp"
+                    android:textColor="#374151"
+                    android:padding="12dp" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+        </LinearLayout>
+
+        <!-- Service Center Field -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Service Center *"
+                android:textSize="14sp"
+                android:textColor="#0F172A"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <EditText
+                android:id="@+id/serviceCenterEditText"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:hint="Enter service center name"
+                android:background="@drawable/edittext_border_background"
+                android:padding="12dp"
+                android:inputType="text"
+                android:textSize="14sp"
+                android:textColor="#374151"
+                android:textColorHint="#6B7280"
+                android:gravity="center_vertical" />
+
+        </LinearLayout>
+
+        <!-- Address Field -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Address *"
+                android:textSize="14sp"
+                android:textColor="#0F172A"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <EditText
+                android:id="@+id/addressEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Enter service center address..."
+                android:background="@drawable/edittext_border_background"
+                android:padding="12dp"
+                android:minLines="1"
+                android:maxLines="2"
+                android:gravity="top"
+                android:inputType="textMultiLine"
+                android:textSize="14sp"
+                android:textColor="#374151"
+                android:textColorHint="#6B7280" />
+
+        </LinearLayout>
+
+        <!-- Date Fields Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <!-- Scheduled Date -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginEnd="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Scheduled Date *"
+                    android:textSize="14sp"
+                    android:textColor="#0F172A"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <EditText
+                    android:id="@+id/scheduledDateEditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:hint="Select date"
+                    android:background="@drawable/edittext_border_background"
+                    android:padding="12dp"
+                    android:inputType="none"
+                    android:focusable="false"
+                    android:clickable="true"
+                    android:textSize="14sp"
+                    android:textColor="#374151"
+                    android:textColorHint="#6B7280"
+                    android:gravity="center_vertical" />
+
+            </LinearLayout>
+
+            <!-- Completion Date -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="8dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Completion Date"
+                    android:textSize="14sp"
+                    android:textColor="#0F172A"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <EditText
+                    android:id="@+id/completionDateEditText"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:hint="Select date"
+                    android:background="@drawable/edittext_border_background"
+                    android:padding="12dp"
+                    android:inputType="none"
+                    android:focusable="false"
+                    android:clickable="true"
+                    android:textSize="14sp"
+                    android:textColor="#374151"
+                    android:textColorHint="#6B7280"
+                    android:gravity="center_vertical" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Cost Service Field -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cost Service"
+                android:textSize="14sp"
+                android:textColor="#0F172A"
+                android:textStyle="bold"
+                android:layout_marginBottom="8dp" />
+
+            <EditText
+                android:id="@+id/costServiceEditText"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:hint="Enter service cost (₱)"
+                android:background="@drawable/edittext_border_background"
+                android:padding="12dp"
+                android:inputType="numberDecimal"
+                android:textSize="14sp"
+                android:textColor="#374151"
+                android:textColorHint="#6B7280"
+                android:gravity="center_vertical" />
+
+        </LinearLayout>
+
+        <!-- Receipt Image Upload -->
+        <LinearLayout
+            android:id="@+id/receiptImagesContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Receipt Images"
+                android:textColor="#6B7280"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Upload Button and Images Row -->
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="horizontal">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="80dp"
+                    android:orientation="horizontal"
+                    android:padding="0dp"
+                    android:gravity="center_vertical">
+
+                    <!-- Upload Button -->
+                    <ImageView
+                        android:id="@+id/uploadReceiptButton"
+                        android:layout_width="80dp"
+                        android:layout_height="80dp"
+                        android:background="@drawable/upload_button_background"
+                        android:scaleType="centerInside"
+                        android:src="@drawable/ic_camera"
+                        android:tint="#6B7280"
+                        android:padding="20dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_marginEnd="8dp" />
+
+                    <!-- Selected Images Container -->
+                    <LinearLayout
+                        android:id="@+id/selectedImagesContainer"
+                        android:layout_width="wrap_content"
+                        android:layout_height="80dp"
+                        android:orientation="horizontal" />
+
+                </LinearLayout>
+
+            </HorizontalScrollView>
+
+        </LinearLayout>
+
+        <!-- Action Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="8dp">
+
+            <!-- Cancel Button -->
+            <Button
+                android:id="@+id/cancelButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Cancel Maintenance"
+                android:textSize="14sp"
+                android:textColor="@color/button_cancel_text"
+                android:backgroundTint="@color/button_cancel_bg"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Scheduled Button -->
+            <Button
+                android:id="@+id/scheduledButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Scheduled"
+                android:textSize="14sp"
+                android:textColor="@color/button_white_text"
+                android:backgroundTint="@color/button_scheduled_bg"
+                android:layout_marginBottom="8dp" />
+
+            <!-- In Progress Button -->
+            <Button
+                android:id="@+id/inProgressButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="In Progress"
+                android:textSize="14sp"
+                android:textColor="@color/button_white_text"
+                android:backgroundTint="@color/button_in_progress_bg"
+                android:layout_marginBottom="8dp" />
+
+            <!-- Add to Complete Button -->
+            <Button
+                android:id="@+id/addToCompleteButton"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Add to Complete"
+                android:textSize="14sp"
+                android:textColor="@color/button_white_text"
+                android:backgroundTint="@color/button_complete_bg" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>
