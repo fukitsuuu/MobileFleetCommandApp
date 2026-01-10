@@ -131,13 +131,14 @@ public class LocationTrackingService extends Service {
     private void createLocationRequest() {
         try {
             // For Google Play Services Location 21.0.1, use create() method
+            // Configure for consistent 3-second updates
             locationRequest = LocationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval(10000) // Update every 10 seconds
-                .setFastestInterval(5000) // Fastest update: 5 seconds (if device moves faster)
-                .setMaxWaitTime(60000) // Maximum wait time: 1 minute
-                .setSmallestDisplacement(0); // Update every 10 seconds regardless of movement (0 = no displacement filter)
-            Log.d(TAG, "Location request created successfully");
+                .setInterval(3000) // Update every 3 seconds
+                .setFastestInterval(3000) // Fastest update: 3 seconds (same as interval for consistency)
+                .setMaxWaitTime(3000) // Maximum wait time: 3 seconds (prevents batching and ensures consistent updates)
+                .setSmallestDisplacement(0); // Update regardless of movement (0 = no displacement filter)
+            Log.d(TAG, "Location request created: 3-second interval, consistent updates");
         } catch (Exception e) {
             Log.e(TAG, "Error creating location request: " + e.getMessage());
             e.printStackTrace();
@@ -145,9 +146,10 @@ public class LocationTrackingService extends Service {
             try {
                 locationRequest = LocationRequest.create();
                 locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-                locationRequest.setInterval(10000); // Update every 10 seconds
-                locationRequest.setFastestInterval(5000); // Fastest update: 5 seconds
-                Log.d(TAG, "Created minimal location request");
+                locationRequest.setInterval(3000); // Update every 3 seconds
+                locationRequest.setFastestInterval(3000); // Fastest update: 3 seconds
+                locationRequest.setMaxWaitTime(3000); // Maximum wait: 3 seconds
+                Log.d(TAG, "Created minimal location request with 3-second interval");
             } catch (Exception e2) {
                 Log.e(TAG, "Critical: Cannot create LocationRequest: " + e2.getMessage());
                 // Set to null, service will handle this gracefully
