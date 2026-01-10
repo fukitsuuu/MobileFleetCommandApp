@@ -81,6 +81,22 @@ public interface ApiService {
             @Field("receipt_images") String receiptImages
     );
 
+    // Update vehicle location (for real-time tracking)
+    @FormUrlEncoded
+    @POST("update_vehicle_location.php")
+    Call<GenericResponse> updateVehicleLocation(
+            @Field("username") String username,
+            @Field("driverID") String driverID,
+            @Field("vehicle_number") String vehicleNumber,
+            @Field("latitude") String latitude,
+            @Field("longitude") String longitude,
+            @Field("accuracy") String accuracy,
+            @Field("bearing") String bearing,
+            @Field("speed") String speed,
+            @Field("altitude") String altitude,
+            @Field("trip_ID") String tripID
+    );
+
 }
 
 

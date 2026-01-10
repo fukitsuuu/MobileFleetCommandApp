@@ -50,6 +50,10 @@ dependencies {
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
     implementation("androidx.cardview:cardview:1.0.0")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+    
+    // Google Play Services Location for location tracking
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

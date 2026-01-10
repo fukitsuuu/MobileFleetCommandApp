@@ -3,43 +3,40 @@ package com.atiera.mobilefleetcommandapp;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.os.Bundle;
-import android.view.MenuItem;
-import android.view.View;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.core.content.ContextCompat; // Added for status bar color
-import androidx.activity.OnBackPressedCallback; // Added for modern back press handling
-
-import com.google.android.material.navigation.NavigationView;
-import android.view.LayoutInflater;
-import android.widget.LinearLayout;
-import android.widget.ProgressBar;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.view.MotionEvent;
-import android.widget.Button;
-import android.content.SharedPreferences;
 import android.content.DialogInterface;
 import android.content.res.ColorStateList;
+import android.os.Build;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import com.google.android.material.textfield.TextInputEditText;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
 import android.graphics.Color;
+import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import com.google.android.material.navigation.NavigationView;
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.List;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -55,6 +52,7 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
     private static final String KEY_USERNAME = "username";
     private static final String KEY_CAMERA_PERMISSION_ASKED = "camera_permission_asked";
     private static final int REQUEST_CAMERA_PERMISSION_FIRST_TIME = 1004;
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1005;
 
     // Dashboard active trips UI
     private LinearLayout activeTripsContainer;
@@ -89,7 +87,7 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
         dashboardLoading = findViewById(R.id.dashboardLoading);
         noActiveTripsText = findViewById(R.id.noActiveTripsText);
 
-        // Fetch active trips initially
+        // Fetch active trips initially - this will also start location service if trips found
         fetchActiveTrips();
 
         // Set up modern back press handling
@@ -141,6 +139,8 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
                             }
                             if (body.driver.idNumber != null && !body.driver.idNumber.isEmpty()) {
                                 idText.setText("Driver ID: " + body.driver.idNumber);
+                                // Save driverID to SharedPreferences for location tracking service
+                                prefs.edit().putString("driverID", body.driver.idNumber).apply();
                             }
                             if (body.driver.imageUrl != null && !body.driver.imageUrl.isEmpty()) {
                                 try {
@@ -294,9 +294,28 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
     private void renderActiveTrips(List<TripResponse.Trip> activeTrips) {
         if (activeTrips == null || activeTrips.isEmpty()) {
             noActiveTripsText.setVisibility(View.VISIBLE);
+            // No active trips - service will stop itself after checking
+            Log.d("DashboardActivity", "No active trips found");
             return;
         }
         noActiveTripsText.setVisibility(View.GONE);
+        Log.d("DashboardActivity", "Found " + activeTrips.size() + " active trip(s) - checking location permission");
+        
+        // Driver has active trips - request location permission and start tracking service
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) 
+                == PackageManager.PERMISSION_GRANTED) {
+            Log.d("DashboardActivity", "Location permission granted - starting service");
+            startLocationTrackingService();
+        } else {
+            Log.d("DashboardActivity", "Location permission not granted - requesting permission");
+            // Request location permission when active trips are found
+            ActivityCompat.requestPermissions(this,
+                new String[]{
+                    android.Manifest.permission.ACCESS_FINE_LOCATION,
+                    android.Manifest.permission.ACCESS_COARSE_LOCATION
+                },
+                LOCATION_PERMISSION_REQUEST_CODE);
+        }
         LayoutInflater inflater = LayoutInflater.from(this);
         for (TripResponse.Trip trip : activeTrips) {
             View card = inflater.inflate(R.layout.trip_item, activeTripsContainer, false);
@@ -684,6 +703,17 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
             }
             // Mark that we've asked for permission
             sharedPreferences.edit().putBoolean(KEY_CAMERA_PERMISSION_ASKED, true).apply();
+        } else if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            // Handle location permission request
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Location permission granted, start the service
+                startLocationTrackingService();
+            } else {
+                // Permission denied - show message
+                Toast.makeText(this, 
+                    "Location permission is required for real-time vehicle tracking", 
+                    Toast.LENGTH_LONG).show();
+            }
         }
     }
     
@@ -704,6 +734,68 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
         }
     }
 
+    /**
+     * Check location permissions and start location tracking service if permissions are granted
+     */
+    private void checkLocationPermissionsAndStartService() {
+        try {
+            // Only start service if location permission is already granted
+            // If not granted, wait for user to grant permission first
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) 
+                    == PackageManager.PERMISSION_GRANTED) {
+                // Permissions granted, start the service
+                startLocationTrackingService();
+            } else {
+                // Don't request permissions automatically on startup - let user decide
+                // Permission will be requested when needed (e.g., when trip is assigned)
+                Log.d("DashboardActivity", "Location permission not granted, service will start when permission is granted");
+            }
+        } catch (Exception e) {
+            Log.e("DashboardActivity", "Error checking location permissions: " + e.getMessage());
+            // Don't crash if there's an error, just log it
+        }
+    }
+
+    /**
+     * Start the location tracking service (it will check for active trips internally)
+     */
+    private void startLocationTrackingService() {
+        try {
+            // Double-check permission before starting
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) 
+                    != PackageManager.PERMISSION_GRANTED) {
+                Log.d("DashboardActivity", "Location permission not granted, cannot start tracking service");
+                return;
+            }
+
+            Intent serviceIntent = new Intent(this, LocationTrackingService.class);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                try {
+                    ContextCompat.startForegroundService(this, serviceIntent);
+                    Log.d("DashboardActivity", "Location tracking service started (foreground)");
+                } catch (IllegalStateException e) {
+                    // Fallback if foreground service fails
+                    Log.w("DashboardActivity", "Foreground service start failed, trying regular service: " + e.getMessage());
+                    startService(serviceIntent);
+                }
+            } else {
+                startService(serviceIntent);
+                Log.d("DashboardActivity", "Location tracking service started");
+            }
+        } catch (SecurityException e) {
+            Log.e("DashboardActivity", "Security exception starting location service: " + e.getMessage());
+        } catch (Exception e) {
+            Log.e("DashboardActivity", "Error starting location tracking service: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Refresh active trips when activity resumes
+        fetchActiveTrips();
+    }
 
 }
 
