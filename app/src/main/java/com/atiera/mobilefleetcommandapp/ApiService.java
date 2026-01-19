@@ -97,6 +97,26 @@ public interface ApiService {
             @Field("trip_ID") String tripID
     );
 
+    // Update driver profile
+    @FormUrlEncoded
+    @POST("update_driver_profile.php")
+    Call<GenericResponse> updateDriverProfile(
+            @Field("driver_id") String driverId,
+            @Field("driver_fname") String firstName,
+            @Field("driver_mname") String middleName,
+            @Field("driver_lname") String lastName,
+            @Field("driver_birthdate") String birthDate,
+            @Field("driver_gender") String gender,
+            @Field("driver_cnumber") String contactNumber,
+            @Field("driver_address") String address,
+            @Field("driver_licenseNumber") String licenseNumber,
+            @Field("driver_licenseIssued") String licenseIssued,
+            @Field("driver_licenseExpiry") String licenseExpiry,
+            @Field("driver_emergencyContactName") String emergencyContactName,
+            @Field("driver_emergencyContactNumber") String emergencyContactNumber,
+            @Field("driver_bloodType") String bloodType
+    );
+
 }
 
 
