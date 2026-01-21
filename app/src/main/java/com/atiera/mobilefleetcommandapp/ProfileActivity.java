@@ -151,6 +151,9 @@ public class ProfileActivity extends DashboardActivity {
                                         .into(img);
                             } catch (Exception ignored) {}
                         }
+                        
+                        // Check if all required fields are filled and hide Edit Profile button if complete
+                        checkAndUpdateEditButtonVisibility();
                     }
                 }
 
@@ -347,6 +350,8 @@ public class ProfileActivity extends DashboardActivity {
                     GenericResponse body = response.body();
                     if (body.ok) {
                         Toast.makeText(ProfileActivity.this, "Profile updated successfully!", Toast.LENGTH_SHORT).show();
+                        // Check if all fields are now complete and hide Edit button
+                        checkAndUpdateEditButtonVisibility();
                     } else {
                         Toast.makeText(ProfileActivity.this, "Error: " + (body.msg != null ? body.msg : "Failed to update profile"), Toast.LENGTH_LONG).show();
                         toggleEditMode(); // Re-enable edit mode on error
@@ -399,5 +404,34 @@ public class ProfileActivity extends DashboardActivity {
             }
             return false;
         });
+    }
+
+    /**
+     * Check if all required fields are filled and hide/show Edit Profile button accordingly
+     */
+    private void checkAndUpdateEditButtonVisibility() {
+        Button editProfileButton = findViewById(R.id.editProfileButton);
+        if (editProfileButton == null) return;
+
+        // Check all required fields
+        boolean allFieldsFilled = 
+            (first != null && !first.getText().toString().trim().isEmpty()) &&
+            (last != null && !last.getText().toString().trim().isEmpty()) &&
+            (bdate != null && !bdate.getText().toString().trim().isEmpty()) &&
+            (gender != null && gender.getSelectedItemPosition() > 0) &&
+            (contact != null && !contact.getText().toString().trim().isEmpty()) &&
+            (address != null && !address.getText().toString().trim().isEmpty()) &&
+            (licNum != null && !licNum.getText().toString().trim().isEmpty()) &&
+            (licIssued != null && !licIssued.getText().toString().trim().isEmpty()) &&
+            (licExpiry != null && !licExpiry.getText().toString().trim().isEmpty()) &&
+            (emName != null && !emName.getText().toString().trim().isEmpty()) &&
+            (emNumber != null && !emNumber.getText().toString().trim().isEmpty());
+
+        // Hide button if all fields are complete, show if any field is missing
+        if (allFieldsFilled) {
+            editProfileButton.setVisibility(View.GONE);
+        } else {
+            editProfileButton.setVisibility(View.VISIBLE);
+        }
     }
 }
