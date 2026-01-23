@@ -3,6 +3,8 @@ package com.atiera.mobilefleetcommandapp;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -31,6 +33,11 @@ public class MessagesActivity extends AppCompatActivity {
     private TextView emptyMessages;
     private TextView headerSubtitle;
     private ConversationAdapter adapter;
+
+    private Handler pollHandler;
+    private Runnable pollRunnable;
+    private static final long POLL_INTERVAL = 4000; // 4 seconds
+    private boolean isPolling = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -62,12 +69,87 @@ public class MessagesActivity extends AppCompatActivity {
         conversationsList.setAdapter(adapter);
 
         fetchConversations();
+        startPolling();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         fetchConversations();
+        if (!isPolling) {
+            startPolling();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopPolling();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopPolling();
+    }
+
+    private void startPolling() {
+        if (isPolling) return;
+        SharedPreferences prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+        if (prefs.getString(KEY_USERNAME, "").isEmpty()) return;
+        isPolling = true;
+        pollHandler = new Handler(Looper.getMainLooper());
+        pollRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (isPolling) {
+                    fetchConversationsSilent();
+                    pollHandler.postDelayed(this, POLL_INTERVAL);
+                }
+            }
+        };
+        pollHandler.postDelayed(pollRunnable, POLL_INTERVAL);
+    }
+
+    private void stopPolling() {
+        isPolling = false;
+        if (pollHandler != null && pollRunnable != null) {
+            pollHandler.removeCallbacks(pollRunnable);
+        }
+    }
+
+    /** Refresh conversation list without showing progress; used for auto-update polling. */
+    private void fetchConversationsSilent() {
+        SharedPreferences prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+        String username = prefs.getString(KEY_USERNAME, "");
+        if (username == null || username.isEmpty()) return;
+
+        ApiClient.get().getDriverConversations("conversations_list", username)
+            .enqueue(new Callback<DriverMessagesResponses.ConversationsResponse>() {
+                @Override
+                public void onResponse(Call<DriverMessagesResponses.ConversationsResponse> call,
+                                       Response<DriverMessagesResponses.ConversationsResponse> response) {
+                    if (!response.isSuccessful() || response.body() == null || !response.body().success) return;
+                    List<Conversation> list = response.body().conversations;
+                    runOnUiThread(() -> {
+                        if (list == null || list.isEmpty()) {
+                            headerSubtitle.setText("Your messages will appear here");
+                            adapter.setItems(null);
+                            emptyMessages.setText("No messages yet.");
+                            emptyMessages.setVisibility(View.VISIBLE);
+                            conversationsList.setVisibility(View.GONE);
+                            return;
+                        }
+                        headerSubtitle.setText(list.size() + " conversation(s)");
+                        adapter.setItems(list);
+                        emptyMessages.setVisibility(View.GONE);
+                        conversationsList.setVisibility(View.VISIBLE);
+                    });
+                }
+
+                @Override
+                public void onFailure(Call<DriverMessagesResponses.ConversationsResponse> call, Throwable t) { }
+            });
     }
 
     private void fetchConversations() {

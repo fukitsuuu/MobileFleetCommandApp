@@ -66,6 +66,12 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
     private Runnable heartbeatRunnable;
     private static final long HEARTBEAT_INTERVAL = 60000; // 1 minute
 
+    // Message icon unread polling
+    private Handler messageIconPollHandler;
+    private Runnable messageIconPollRunnable;
+    private static final long MESSAGE_ICON_POLL_INTERVAL = 5000; // 5 seconds
+    private boolean isMessageIconPolling = false;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -100,6 +106,10 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
         // Initialize and start heartbeat
         initializeHeartbeat();
         startHeartbeat();
+
+        // Initialize and start message icon polling
+        initializeMessageIconPolling();
+        startMessageIconPolling();
 
         // Set up modern back press handling
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
@@ -201,13 +211,17 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
             }
         });
 
-        messageIcon.setOnClickListener(new View.OnClickListener() {
+        View messageIconWrap = findViewById(R.id.messageIconWrap);
+        View messageClickTarget = (messageIconWrap != null) ? messageIconWrap : messageIcon;
+        messageClickTarget.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(DashboardActivity.this, MessagesActivity.class);
                 startActivity(intent);
             }
         });
+
+        fetchUnreadAndUpdateMessageIcon();
     }
 
     @Override
@@ -810,6 +824,12 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
         fetchActiveTrips();
         // Resume heartbeat when app becomes active
         startHeartbeat();
+        // Resume message icon polling
+        if (!isMessageIconPolling) {
+            startMessageIconPolling();
+        }
+        // Update message icon immediately when returning
+        fetchUnreadAndUpdateMessageIcon();
     }
     
     @Override
@@ -817,6 +837,8 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
         super.onPause();
         // Stop heartbeat when app is paused/backgrounded
         stopHeartbeat();
+        // Stop message icon polling
+        stopMessageIconPolling();
     }
     
     @Override
@@ -824,6 +846,8 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
         super.onDestroy();
         // Clean up heartbeat when activity is destroyed
         stopHeartbeat();
+        // Clean up message icon polling
+        stopMessageIconPolling();
     }
     
     /**
@@ -911,6 +935,95 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
                 Log.e("DashboardActivity", "Heartbeat network error: " + t.getMessage(), t);
             }
         });
+    }
+
+    /**
+     * Fetch unread message count and update message icon (bold + red dot) when there are unread messages.
+     */
+    private void fetchUnreadAndUpdateMessageIcon() {
+        SharedPreferences prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+        String username = prefs.getString(KEY_USERNAME, "");
+        if (username == null || username.isEmpty()) {
+            updateMessageIconState(false);
+            return;
+        }
+        ApiClient.get().getUnreadCount("unread_count", username)
+            .enqueue(new Callback<DriverMessagesResponses.UnreadCountResponse>() {
+                @Override
+                public void onResponse(Call<DriverMessagesResponses.UnreadCountResponse> call,
+                                       Response<DriverMessagesResponses.UnreadCountResponse> response) {
+                    final boolean hasUnread = response.isSuccessful() && response.body() != null
+                            && response.body().success && response.body().count > 0;
+                    runOnUiThread(() -> updateMessageIconState(hasUnread));
+                }
+
+                @Override
+                public void onFailure(Call<DriverMessagesResponses.UnreadCountResponse> call, Throwable t) {
+                    runOnUiThread(() -> updateMessageIconState(false));
+                }
+            });
+    }
+
+    private void updateMessageIconState(boolean hasUnread) {
+        ImageView icon = findViewById(R.id.messageIcon);
+        View badge = findViewById(R.id.messageUnreadBadge);
+        if (icon != null) {
+            icon.setImageResource(hasUnread ? R.drawable.ic_message_bold : R.drawable.ic_message);
+        }
+        if (badge != null) {
+            badge.setVisibility(hasUnread ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    /**
+     * Initialize message icon polling handler and runnable
+     */
+    private void initializeMessageIconPolling() {
+        messageIconPollHandler = new Handler(Looper.getMainLooper());
+        messageIconPollRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (isMessageIconPolling) {
+                    fetchUnreadAndUpdateMessageIcon();
+                    // Schedule next poll
+                    if (messageIconPollHandler != null) {
+                        messageIconPollHandler.postDelayed(this, MESSAGE_ICON_POLL_INTERVAL);
+                    }
+                }
+            }
+        };
+    }
+
+    /**
+     * Start polling for unread messages to update icon state
+     */
+    private void startMessageIconPolling() {
+        SharedPreferences prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+        String username = prefs.getString(KEY_USERNAME, "");
+        if (username == null || username.isEmpty() || isMessageIconPolling) {
+            return;
+        }
+        isMessageIconPolling = true;
+        if (messageIconPollHandler != null && messageIconPollRunnable != null) {
+            // Remove any existing callbacks to avoid duplicates
+            messageIconPollHandler.removeCallbacks(messageIconPollRunnable);
+            // Fetch immediately
+            fetchUnreadAndUpdateMessageIcon();
+            // Schedule periodic polling
+            messageIconPollHandler.postDelayed(messageIconPollRunnable, MESSAGE_ICON_POLL_INTERVAL);
+            Log.d("DashboardActivity", "Message icon polling started - will check every " + (MESSAGE_ICON_POLL_INTERVAL / 1000) + " seconds");
+        }
+    }
+
+    /**
+     * Stop polling for unread messages
+     */
+    private void stopMessageIconPolling() {
+        isMessageIconPolling = false;
+        if (messageIconPollHandler != null && messageIconPollRunnable != null) {
+            messageIconPollHandler.removeCallbacks(messageIconPollRunnable);
+            Log.d("DashboardActivity", "Message icon polling stopped");
+        }
     }
 
 }

@@ -1,5 +1,6 @@
 package com.atiera.mobilefleetcommandapp;
 
+import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -48,6 +49,10 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
         holder.lastMessage.setText(last);
         holder.time.setText(c.lastTime != null ? c.lastTime : "");
         holder.unreadBadge.setVisibility(c.hasUnread ? View.VISIBLE : View.GONE);
+
+        boolean unread = c.hasUnread;
+        holder.name.setTypeface(null, unread ? Typeface.BOLD : Typeface.NORMAL);
+        holder.lastMessage.setTypeface(null, unread ? Typeface.BOLD : Typeface.NORMAL);
 
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {

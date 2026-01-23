@@ -61,20 +61,37 @@
                 android:layout_centerVertical="true"
                 android:layout_marginEnd="65dp"/>
 
-            <!-- Message Icon - Far Right -->
-            <ImageView
-                android:id="@+id/messageIcon"
+            <!-- Message Icon - Far Right (with unread badge) -->
+            <FrameLayout
+                android:id="@+id/messageIconWrap"
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/ic_message"
-                android:contentDescription="Messages"
-                android:tint="#FFFFFF"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="?attr/selectableItemBackgroundBorderless"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:layout_marginEnd="16dp"/>
+                android:layout_marginEnd="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackgroundBorderless">
+
+                <ImageView
+                    android:id="@+id/messageIcon"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_message"
+                    android:contentDescription="Messages"
+                    android:tint="#FFFFFF"/>
+
+                <View
+                    android:id="@+id/messageUnreadBadge"
+                    android:layout_width="10dp"
+                    android:layout_height="10dp"
+                    android:layout_gravity="top|end"
+                    android:layout_marginTop="-2dp"
+                    android:layout_marginEnd="-2dp"
+                    android:background="@drawable/circle_red"
+                    android:visibility="gone"/>
+
+            </FrameLayout>
 
         </RelativeLayout>
 

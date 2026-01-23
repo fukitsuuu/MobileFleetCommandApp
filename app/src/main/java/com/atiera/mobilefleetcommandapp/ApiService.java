@@ -130,6 +130,12 @@ public interface ApiService {
     // --- Driver messaging (driver_messages.php) ---
 
     @GET("driver_messages.php")
+    Call<DriverMessagesResponses.UnreadCountResponse> getUnreadCount(
+            @Query("action") String action,
+            @Query("username") String username
+    );
+
+    @GET("driver_messages.php")
     Call<DriverMessagesResponses.ConversationsResponse> getDriverConversations(
             @Query("action") String action,
             @Query("username") String username

@@ -33,4 +33,10 @@ public class DriverMessagesResponses {
         public String error;
         public int updated;
     }
+
+    public static class UnreadCountResponse {
+        public boolean success;
+        public String error;
+        public int count;
+    }
 }
