@@ -81,6 +81,11 @@
             android:theme="@style/Base.Theme.MobileFleetCommandApp" />
 
         <activity
+            android:name=".ConversationActivity"
+            android:exported="false"
+            android:theme="@style/Base.Theme.MobileFleetCommandApp" />
+
+        <activity
             android:name=".NotificationsActivity"
             android:exported="false"
             android:theme="@style/Base.Theme.MobileFleetCommandApp" />

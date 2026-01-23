@@ -3,7 +3,9 @@ package com.atiera.mobilefleetcommandapp;
 import retrofit2.Call;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
+import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.Query;
 
 public interface ApiService {
     @FormUrlEncoded
@@ -123,6 +125,46 @@ public interface ApiService {
     Call<GenericResponse> sendHeartbeat(
             @Field("username") String username,
             @Field("driverID") String driverID
+    );
+
+    // --- Driver messaging (driver_messages.php) ---
+
+    @GET("driver_messages.php")
+    Call<DriverMessagesResponses.ConversationsResponse> getDriverConversations(
+            @Query("action") String action,
+            @Query("username") String username
+    );
+
+    @GET("driver_messages.php")
+    Call<DriverMessagesResponses.HistoryResponse> getMessageHistory(
+            @Query("action") String action,
+            @Query("username") String username,
+            @Query("peer") String peer
+    );
+
+    @GET("driver_messages.php")
+    Call<DriverMessagesResponses.NewMessagesResponse> getNewMessages(
+            @Query("action") String action,
+            @Query("username") String username,
+            @Query("peer") String peer,
+            @Query("since") String since
+    );
+
+    @FormUrlEncoded
+    @POST("driver_messages.php")
+    Call<DriverMessagesResponses.SendMessageResponse> sendDriverMessage(
+            @Field("action") String action,
+            @Field("username") String username,
+            @Field("to") String to,
+            @Field("message") String message
+    );
+
+    @FormUrlEncoded
+    @POST("driver_messages.php")
+    Call<DriverMessagesResponses.MarkReadResponse> markMessagesAsRead(
+            @Field("action") String action,
+            @Field("username") String username,
+            @Field("peer") String peer
     );
 
 }

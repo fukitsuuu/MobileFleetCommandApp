@@ -64,7 +64,7 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
     // Heartbeat handler for active status
     private Handler heartbeatHandler;
     private Runnable heartbeatRunnable;
-    private static final long HEARTBEAT_INTERVAL = 30000; // 30 seconds
+    private static final long HEARTBEAT_INTERVAL = 60000; // 1 minute
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
