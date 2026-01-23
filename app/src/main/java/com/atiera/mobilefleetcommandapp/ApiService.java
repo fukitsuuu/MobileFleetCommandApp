@@ -117,6 +117,14 @@ public interface ApiService {
             @Field("driver_bloodType") String bloodType
     );
 
+    // Send heartbeat to indicate driver is active
+    @FormUrlEncoded
+    @POST("driver_heartbeat.php")
+    Call<GenericResponse> sendHeartbeat(
+            @Field("username") String username,
+            @Field("driverID") String driverID
+    );
+
 }
 
 

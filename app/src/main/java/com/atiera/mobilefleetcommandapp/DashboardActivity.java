@@ -7,6 +7,8 @@ import android.content.DialogInterface;
 import android.content.res.ColorStateList;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -58,6 +60,11 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
     private LinearLayout activeTripsContainer;
     private ProgressBar dashboardLoading;
     private TextView noActiveTripsText;
+    
+    // Heartbeat handler for active status
+    private Handler heartbeatHandler;
+    private Runnable heartbeatRunnable;
+    private static final long HEARTBEAT_INTERVAL = 30000; // 30 seconds
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -89,6 +96,10 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
 
         // Fetch active trips initially - this will also start location service if trips found
         fetchActiveTrips();
+        
+        // Initialize and start heartbeat
+        initializeHeartbeat();
+        startHeartbeat();
 
         // Set up modern back press handling
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
@@ -139,8 +150,10 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
                             }
                             if (body.driver.idNumber != null && !body.driver.idNumber.isEmpty()) {
                                 idText.setText("Driver ID: " + body.driver.idNumber);
-                                // Save driverID to SharedPreferences for location tracking service
+                                // Save driverID to SharedPreferences for location tracking service and heartbeat
                                 prefs.edit().putString("driverID", body.driver.idNumber).apply();
+                                // Send immediate heartbeat now that driverID is available
+                                sendHeartbeat();
                             }
                             if (body.driver.imageUrl != null && !body.driver.imageUrl.isEmpty()) {
                                 try {
@@ -795,6 +808,109 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
         super.onResume();
         // Refresh active trips when activity resumes
         fetchActiveTrips();
+        // Resume heartbeat when app becomes active
+        startHeartbeat();
+    }
+    
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Stop heartbeat when app is paused/backgrounded
+        stopHeartbeat();
+    }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Clean up heartbeat when activity is destroyed
+        stopHeartbeat();
+    }
+    
+    /**
+     * Initialize heartbeat handler and runnable
+     */
+    private void initializeHeartbeat() {
+        heartbeatHandler = new Handler(Looper.getMainLooper());
+        heartbeatRunnable = new Runnable() {
+            @Override
+            public void run() {
+                sendHeartbeat();
+                // Schedule next heartbeat
+                if (heartbeatHandler != null) {
+                    heartbeatHandler.postDelayed(this, HEARTBEAT_INTERVAL);
+                }
+            }
+        };
+    }
+    
+    /**
+     * Start sending periodic heartbeat signals
+     */
+    private void startHeartbeat() {
+        if (heartbeatHandler != null && heartbeatRunnable != null) {
+            // Remove any existing callbacks to avoid duplicates
+            heartbeatHandler.removeCallbacks(heartbeatRunnable);
+            // Send immediate heartbeat
+            sendHeartbeat();
+            // Schedule periodic heartbeats
+            heartbeatHandler.postDelayed(heartbeatRunnable, HEARTBEAT_INTERVAL);
+            Log.d("DashboardActivity", "Heartbeat started - will send every " + (HEARTBEAT_INTERVAL / 1000) + " seconds");
+        } else {
+            Log.e("DashboardActivity", "Cannot start heartbeat: handler not initialized");
+        }
+    }
+    
+    /**
+     * Stop sending heartbeat signals
+     */
+    private void stopHeartbeat() {
+        if (heartbeatHandler != null && heartbeatRunnable != null) {
+            heartbeatHandler.removeCallbacks(heartbeatRunnable);
+            Log.d("DashboardActivity", "Heartbeat stopped");
+        }
+    }
+    
+    /**
+     * Send heartbeat to server to indicate driver is active
+     */
+    private void sendHeartbeat() {
+        SharedPreferences prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+        String username = prefs.getString(KEY_USERNAME, "");
+        String driverID = prefs.getString("driverID", "");
+        
+        if (username == null || username.isEmpty()) {
+            Log.d("DashboardActivity", "Cannot send heartbeat: username not available");
+            return;
+        }
+        
+        // Log what we're sending for debugging
+        Log.d("DashboardActivity", "Sending heartbeat - username: " + username + ", driverID: " + (driverID.isEmpty() ? "not set" : driverID));
+        
+        ApiClient.get().sendHeartbeat(username, driverID).enqueue(new Callback<GenericResponse>() {
+            @Override
+            public void onResponse(Call<GenericResponse> call, Response<GenericResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().ok) {
+                    Log.d("DashboardActivity", "Heartbeat sent successfully");
+                } else {
+                    String errorMsg = response.body() != null && response.body().msg != null ? response.body().msg : "Unknown error";
+                    Log.e("DashboardActivity", "Heartbeat failed: " + errorMsg + " (HTTP " + response.code() + ")");
+                    // Try to read error response body if available
+                    if (response.errorBody() != null) {
+                        try {
+                            String errorBody = response.errorBody().string();
+                            Log.e("DashboardActivity", "Heartbeat error body: " + errorBody);
+                        } catch (Exception e) {
+                            Log.e("DashboardActivity", "Could not read error body", e);
+                        }
+                    }
+                }
+            }
+            
+            @Override
+            public void onFailure(Call<GenericResponse> call, Throwable t) {
+                Log.e("DashboardActivity", "Heartbeat network error: " + t.getMessage(), t);
+            }
+        });
     }
 
 }
