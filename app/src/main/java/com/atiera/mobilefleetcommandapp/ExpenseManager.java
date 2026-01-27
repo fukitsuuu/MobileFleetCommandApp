@@ -39,6 +39,7 @@ public class ExpenseManager {
     private LinearLayout expensesArea;
     private AutoCompleteTextView expenseTypeDropdown;
     private TextInputEditText costAmountInput;
+    private TextInputEditText fuelConsumptionInput;
     private ImageView uploadReceiptButton;
     private LinearLayout selectedImagesContainer;
     private Button addExpenseButton;
@@ -46,12 +47,13 @@ public class ExpenseManager {
     private LinearLayout totalExpensesContainer;
     private TextView totalExpensesText;
     private LinearLayout costAmountContainer;
+    private LinearLayout fuelConsumptionContainer;
     private LinearLayout receiptImagesContainer;
     private LinearLayout descriptionContainer;
     private TextInputEditText descriptionInput;
     
     // Expense types
-    private String[] expenseTypes = {"Fuel Cost", "Supply Cost", "Other"};
+    private String[] expenseTypes = {"Fuel Cost"};
     
     // Image picker constants
     private static final int REQUEST_IMAGE_PICK = 1001;
@@ -74,12 +76,14 @@ public class ExpenseManager {
         android.util.Log.d("ExpenseManager", "setupExpensesArea called - expensesArea: " + (expensesArea != null) + ", visibility: " + (expensesArea != null ? expensesArea.getVisibility() : "null"));
         expenseTypeDropdown = card.findViewById(R.id.expenseTypeDropdown);
         costAmountInput = card.findViewById(R.id.costAmountInput);
+        fuelConsumptionInput = card.findViewById(R.id.fuelConsumptionInput);
         uploadReceiptButton = card.findViewById(R.id.uploadReceiptButton);
         selectedImagesContainer = card.findViewById(R.id.selectedImagesContainer);
         addExpenseButton = card.findViewById(R.id.addExpenseButton);
         totalExpensesContainer = card.findViewById(R.id.totalExpensesContainer);
         totalExpensesText = card.findViewById(R.id.totalExpensesText);
         costAmountContainer = card.findViewById(R.id.costAmountContainer);
+        fuelConsumptionContainer = card.findViewById(R.id.fuelConsumptionContainer);
         receiptImagesContainer = card.findViewById(R.id.receiptImagesContainer);
         descriptionContainer = card.findViewById(R.id.descriptionContainer);
         descriptionInput = card.findViewById(R.id.descriptionInput);
@@ -208,6 +212,11 @@ public class ExpenseManager {
             costAmountContainer.setVisibility(View.VISIBLE);
         }
         
+        // Show fuel consumption container (for Fuel Cost)
+        if (fuelConsumptionContainer != null) {
+            fuelConsumptionContainer.setVisibility(View.VISIBLE);
+        }
+        
         // Show receipt images container
         if (receiptImagesContainer != null) {
             receiptImagesContainer.setVisibility(View.VISIBLE);
@@ -217,25 +226,13 @@ public class ExpenseManager {
     }
     
     private void showDescriptionField(String expenseType) {
-        // Trim and normalize the expense type
-        String normalizedType = expenseType != null ? expenseType.trim() : "";
-        android.util.Log.d("ExpenseManager", "showDescriptionField called with: '" + normalizedType + "' (length: " + normalizedType.length() + "), descriptionContainer: " + (descriptionContainer != null));
-        
+        // Description field is always hidden since only "Fuel Cost" is available
         if (descriptionContainer != null) {
-            // Show description field only for "Supply Cost" and "Other"
-            if ("Supply Cost".equals(normalizedType) || "Other".equals(normalizedType)) {
-                descriptionContainer.setVisibility(View.VISIBLE);
-                android.util.Log.d("ExpenseManager", "Description field SHOWN for: '" + normalizedType + "', visibility: " + descriptionContainer.getVisibility());
-            } else {
-                descriptionContainer.setVisibility(View.GONE);
-                // Clear description when hidden
-                if (descriptionInput != null) {
-                    descriptionInput.setText("");
-                }
-                android.util.Log.d("ExpenseManager", "Description field HIDDEN for: '" + normalizedType + "', visibility: " + descriptionContainer.getVisibility());
+            descriptionContainer.setVisibility(View.GONE);
+            // Clear description when hidden
+            if (descriptionInput != null) {
+                descriptionInput.setText("");
             }
-        } else {
-            android.util.Log.e("ExpenseManager", "descriptionContainer is NULL!");
         }
     }
     
@@ -627,6 +624,26 @@ public class ExpenseManager {
         String amountText = costAmountInput.getText().toString();
         double amount = Double.parseDouble(amountText);
         
+        // Get fuel consumption if available
+        double fuelConsumption = 0.0;
+        if (fuelConsumptionInput != null) {
+            String fuelConsumptionText = fuelConsumptionInput.getText().toString().trim();
+            android.util.Log.d("ExpenseManager", "Fuel consumption input text: '" + fuelConsumptionText + "'");
+            if (!fuelConsumptionText.isEmpty()) {
+                try {
+                    fuelConsumption = Double.parseDouble(fuelConsumptionText);
+                    android.util.Log.d("ExpenseManager", "Fuel consumption parsed: " + fuelConsumption);
+                } catch (NumberFormatException e) {
+                    android.util.Log.e("ExpenseManager", "Failed to parse fuel consumption: " + e.getMessage());
+                    fuelConsumption = 0.0;
+                }
+            } else {
+                android.util.Log.d("ExpenseManager", "Fuel consumption input is empty");
+            }
+        } else {
+            android.util.Log.e("ExpenseManager", "fuelConsumptionInput is null!");
+        }
+        
         // Get description if available
         String description = "";
         if (descriptionInput != null) {
@@ -635,7 +652,7 @@ public class ExpenseManager {
         
         // Create new expense with image paths (comma-separated)
         String imagePaths = String.join(",", selectedImagePaths);
-        Expense expense = new Expense(currentTripId, expenseType, amount, imagePaths, description);
+        Expense expense = new Expense(currentTripId, expenseType, amount, fuelConsumption, imagePaths, description);
         expenses.add(expense);
         
         // Add to UI (do NOT post yet; posting happens on Mark as done)
@@ -666,17 +683,53 @@ public class ExpenseManager {
             String amountText = costAmountInput.getText().toString();
             try {
                 double amount = Double.parseDouble(amountText);
+                double fuelConsumption = 0.0;
+                if (fuelConsumptionInput != null) {
+                    String fuelConsumptionText = fuelConsumptionInput.getText().toString().trim();
+                    android.util.Log.d("ExpenseManager", "submitAllExpensesForTrip - Fuel consumption input text: '" + fuelConsumptionText + "'");
+                    if (!fuelConsumptionText.isEmpty()) {
+                        try {
+                            fuelConsumption = Double.parseDouble(fuelConsumptionText);
+                            android.util.Log.d("ExpenseManager", "submitAllExpensesForTrip - Fuel consumption parsed: " + fuelConsumption);
+                        } catch (NumberFormatException e) {
+                            android.util.Log.e("ExpenseManager", "submitAllExpensesForTrip - Failed to parse fuel consumption: " + e.getMessage());
+                            fuelConsumption = 0.0;
+                        }
+                    } else {
+                        android.util.Log.d("ExpenseManager", "submitAllExpensesForTrip - Fuel consumption input is empty");
+                    }
+                } else {
+                    android.util.Log.e("ExpenseManager", "submitAllExpensesForTrip - fuelConsumptionInput is null!");
+                }
                 String imagePaths = String.join(",", selectedImagePaths);
                 String description = "";
                 if (descriptionInput != null) {
                     description = descriptionInput.getText().toString().trim();
                 }
-                toSubmit.add(new Expense(currentTripId, type, amount, imagePaths, description));
+                android.util.Log.d("ExpenseManager", "submitAllExpensesForTrip - Creating expense with fuel_consumption: " + fuelConsumption);
+                toSubmit.add(new Expense(currentTripId, type, amount, fuelConsumption, imagePaths, description));
             } catch (Exception ignored) {}
         }
-        // Submit all expense types
+        
+        // Validate that at least one expense has a receipt image
+        boolean hasReceiptImage = false;
+        for (Expense expense : toSubmit) {
+            String receiptPath = expense.getReceiptImagePath();
+            if (receiptPath != null && !receiptPath.trim().isEmpty()) {
+                hasReceiptImage = true;
+                break;
+            }
+        }
+        
+        // If no expenses or no receipt images, show error and return
         if (toSubmit.isEmpty()) {
             if (callback != null) callback.onResult(true);
+            return;
+        }
+        
+        if (!hasReceiptImage) {
+            Toast.makeText(context, "Please upload at least one receipt image before marking as done", Toast.LENGTH_LONG).show();
+            if (callback != null) callback.onResult(false);
             return;
         }
         // Submit all, wait for all to finish
@@ -712,25 +765,47 @@ public class ExpenseManager {
                 payload.put("trip_id", expense.getTripId());
                 payload.put("expense_type", expense.getExpenseType());
                 payload.put("amount", expense.getAmount());
+                double fuelConsumptionValue = expense.getFuelConsumption();
+                payload.put("fuel_consumption", fuelConsumptionValue);
+                android.util.Log.d("ExpenseManager", "Sending fuel_consumption (non-callback): " + fuelConsumptionValue + " for trip: " + expense.getTripId());
                 payload.put("description", expense.getDescription());
                 // Attach base64 contents of all selected images
                 org.json.JSONArray imagesArray = new org.json.JSONArray();
                 try {
                     String allPaths = expense.getReceiptImagePath();
+                    android.util.Log.d("ExpenseManager", "Processing receipt images (non-callback), allPaths: " + (allPaths != null ? allPaths : "null"));
                     if (allPaths != null && !allPaths.isEmpty()) {
                         String[] parts = allPaths.split(",");
+                        android.util.Log.d("ExpenseManager", "Found " + parts.length + " image path(s)");
+                        int imageIndex = 0;
                         for (String p : parts) {
+                            imageIndex++;
                             String path = p.trim();
-                            if (path.isEmpty()) continue;
+                            if (path.isEmpty()) {
+                                android.util.Log.w("ExpenseManager", "Skipping empty path at index " + imageIndex);
+                                continue;
+                            }
                             java.io.File f = new java.io.File(path);
                             if (f.exists()) {
-                                byte[] bytes = java.nio.file.Files.readAllBytes(f.toPath());
-                                String b64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP);
-                                imagesArray.put("data:image/jpeg;base64," + b64);
+                                try {
+                                    byte[] bytes = java.nio.file.Files.readAllBytes(f.toPath());
+                                    android.util.Log.d("ExpenseManager", "Image #" + imageIndex + " read successfully: " + bytes.length + " bytes from " + path);
+                                    String b64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP);
+                                    imagesArray.put("data:image/jpeg;base64," + b64);
+                                    android.util.Log.d("ExpenseManager", "Image #" + imageIndex + " added to array, base64 length: " + b64.length());
+                                } catch (Exception e) {
+                                    android.util.Log.e("ExpenseManager", "Error reading image #" + imageIndex + " from " + path + ": " + e.getMessage());
+                                }
+                            } else {
+                                android.util.Log.w("ExpenseManager", "Image file does not exist: " + path);
                             }
                         }
                     }
-                } catch (Exception ignored) {}
+                    android.util.Log.d("ExpenseManager", "Total images in array (non-callback): " + imagesArray.length());
+                } catch (Exception e) {
+                    android.util.Log.e("ExpenseManager", "Error processing receipt images (non-callback): " + e.getMessage());
+                    e.printStackTrace();
+                }
                 payload.put("receipt_images_base64", imagesArray);
 
                 byte[] body = payload.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
@@ -762,26 +837,48 @@ public class ExpenseManager {
                 payload.put("trip_id", expense.getTripId());
                 payload.put("expense_type", expense.getExpenseType());
                 payload.put("amount", expense.getAmount());
+                double fuelConsumptionValue = expense.getFuelConsumption();
+                payload.put("fuel_consumption", fuelConsumptionValue);
+                android.util.Log.d("ExpenseManager", "Sending fuel_consumption (callback): " + fuelConsumptionValue + " for trip: " + expense.getTripId());
                 payload.put("description", expense.getDescription());
 
                 // Build base64 images array (same as non-callback method) so server saves to database/receipts
                 org.json.JSONArray imagesArray = new org.json.JSONArray();
                 try {
                     String allPaths = expense.getReceiptImagePath();
+                    android.util.Log.d("ExpenseManager", "Processing receipt images, allPaths: " + (allPaths != null ? allPaths : "null"));
                     if (allPaths != null && !allPaths.isEmpty()) {
                         String[] parts = allPaths.split(",");
+                        android.util.Log.d("ExpenseManager", "Found " + parts.length + " image path(s)");
+                        int imageIndex = 0;
                         for (String p : parts) {
+                            imageIndex++;
                             String path = p.trim();
-                            if (path.isEmpty()) continue;
+                            if (path.isEmpty()) {
+                                android.util.Log.w("ExpenseManager", "Skipping empty path at index " + imageIndex);
+                                continue;
+                            }
                             java.io.File f = new java.io.File(path);
                             if (f.exists()) {
-                                byte[] bytes = java.nio.file.Files.readAllBytes(f.toPath());
-                                String b64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP);
-                                imagesArray.put("data:image/jpeg;base64," + b64);
+                                try {
+                                    byte[] bytes = java.nio.file.Files.readAllBytes(f.toPath());
+                                    android.util.Log.d("ExpenseManager", "Image #" + imageIndex + " read successfully: " + bytes.length + " bytes from " + path);
+                                    String b64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP);
+                                    imagesArray.put("data:image/jpeg;base64," + b64);
+                                    android.util.Log.d("ExpenseManager", "Image #" + imageIndex + " added to array, base64 length: " + b64.length());
+                                } catch (Exception e) {
+                                    android.util.Log.e("ExpenseManager", "Error reading image #" + imageIndex + " from " + path + ": " + e.getMessage());
+                                }
+                            } else {
+                                android.util.Log.w("ExpenseManager", "Image file does not exist: " + path);
                             }
                         }
                     }
-                } catch (Exception ignored) {}
+                    android.util.Log.d("ExpenseManager", "Total images in array: " + imagesArray.length());
+                } catch (Exception e) {
+                    android.util.Log.e("ExpenseManager", "Error processing receipt images: " + e.getMessage());
+                    e.printStackTrace();
+                }
                 payload.put("receipt_images_base64", imagesArray);
                 // Do NOT send the local Android file path to the server
 
@@ -936,6 +1033,9 @@ public class ExpenseManager {
             costAmountInput.setText("");
             costAmountInput.setTextColor(0xFF9CA3AF); // Light grey color
         }
+        if (fuelConsumptionInput != null) {
+            fuelConsumptionInput.setText("");
+        }
         if (descriptionInput != null) {
             descriptionInput.setText("");
         }
@@ -1010,12 +1110,23 @@ public class ExpenseManager {
         String amountText = costAmountInput.getText().toString();
         double amount;
         try { amount = Double.parseDouble(amountText); } catch (Exception e) { return; }
+        double fuelConsumption = 0.0;
+        if (fuelConsumptionInput != null) {
+            String fuelConsumptionText = fuelConsumptionInput.getText().toString().trim();
+            if (!fuelConsumptionText.isEmpty()) {
+                try {
+                    fuelConsumption = Double.parseDouble(fuelConsumptionText);
+                } catch (NumberFormatException e) {
+                    fuelConsumption = 0.0;
+                }
+            }
+        }
         String imagePaths = String.join(",", selectedImagePaths);
         String description = "";
         if (descriptionInput != null) {
             description = descriptionInput.getText().toString().trim();
         }
-        Expense expense = new Expense(currentTripId, expenseType, amount, imagePaths, description);
+        Expense expense = new Expense(currentTripId, expenseType, amount, fuelConsumption, imagePaths, description);
         expenses.add(expense);
         addExpenseToUI(expense);
         // Submit all expense types
@@ -1035,12 +1146,23 @@ public class ExpenseManager {
         String amountText = costAmountInput.getText().toString();
         double amount;
         try { amount = Double.parseDouble(amountText); } catch (Exception e) { if (callback != null) callback.onResult(false); return; }
+        double fuelConsumption = 0.0;
+        if (fuelConsumptionInput != null) {
+            String fuelConsumptionText = fuelConsumptionInput.getText().toString().trim();
+            if (!fuelConsumptionText.isEmpty()) {
+                try {
+                    fuelConsumption = Double.parseDouble(fuelConsumptionText);
+                } catch (NumberFormatException e) {
+                    fuelConsumption = 0.0;
+                }
+            }
+        }
         String imagePaths = String.join(",", selectedImagePaths);
         String description = "";
         if (descriptionInput != null) {
             description = descriptionInput.getText().toString().trim();
         }
-        Expense expense = new Expense(currentTripId, type, amount, imagePaths, description);
+        Expense expense = new Expense(currentTripId, type, amount, fuelConsumption, imagePaths, description);
         // Try posting; only proceed on success
         postFuelExpense(expense, success -> {
             if (success) {

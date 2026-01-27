@@ -23,7 +23,7 @@ public class TripExpensesHandler {
     private Button addExpenseButton;
     
     // Expense types for dropdown
-    private String[] expenseTypes = {"Fuel Cost", "Supply Cost", "Other"};
+    private String[] expenseTypes = {"Fuel Cost"};
     
     public TripExpensesHandler(Context context) {
         this.context = context;

@@ -38,7 +38,9 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.gson.Gson;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -295,12 +297,21 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
                 if (response.isSuccessful() && response.body() != null && response.body().ok) {
                     List<TripResponse.Trip> trips = response.body().trips;
                     List<TripResponse.Trip> active = new ArrayList<>();
+                    Set<String> seenTripIds = new HashSet<>(); // Track seen trip IDs to prevent duplicates
                     if (trips != null) {
                         for (TripResponse.Trip t : trips) {
                             if (t.status == null) continue;
+                            // Skip duplicate trip IDs
+                            if (t.tripID != null && seenTripIds.contains(t.tripID)) {
+                                Log.d("DashboardActivity", "Skipping duplicate trip: " + t.tripID);
+                                continue;
+                            }
                             String s = t.status.toLowerCase();
                             if (s.equals("preparing") || s.equals("departed") || s.equals("in transit") || s.equals("picked up") || s.equals("delivered")) {
                                 active.add(t);
+                                if (t.tripID != null) {
+                                    seenTripIds.add(t.tripID);
+                                }
                             }
                         }
                     }
@@ -319,6 +330,11 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
     }
 
     private void renderActiveTrips(List<TripResponse.Trip> activeTrips) {
+        if (activeTripsContainer == null) return;
+        
+        // CRITICAL: Clear container FIRST to prevent duplicates
+        activeTripsContainer.removeAllViews();
+        
         if (activeTrips == null || activeTrips.isEmpty()) {
             noActiveTripsText.setVisibility(View.VISIBLE);
             // No active trips - service will stop itself after checking
@@ -344,7 +360,14 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
                 LOCATION_PERMISSION_REQUEST_CODE);
         }
         LayoutInflater inflater = LayoutInflater.from(this);
+        Set<String> renderedTripIds = new HashSet<>(); // Track rendered trip IDs to prevent UI duplicates
         for (TripResponse.Trip trip : activeTrips) {
+            // Double-check: Skip if this tripID was already rendered in this render cycle
+            if (trip.tripID != null && renderedTripIds.contains(trip.tripID)) {
+                Log.d("DashboardActivity", "Skipping duplicate trip in render: " + trip.tripID);
+                continue;
+            }
+            
             View card = inflater.inflate(R.layout.trip_item, activeTripsContainer, false);
 
             TextView tripIdText = card.findViewById(R.id.tripIdText);
@@ -432,9 +455,25 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
             }
 
             // Toggle dropdown and map
+            // Get references to expensesArea and dropdownContent for click detection
+            final LinearLayout expensesAreaRef = card.findViewById(R.id.expensesArea);
+            final LinearLayout dropdownContentRef = dropdownContent;
+            
             card.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    // Check if the click originated from expensesArea or dropdownContent
+                    // If so, don't toggle the dropdown (prevent closing when interacting with expenses)
+                    View clickedView = v;
+                    while (clickedView != null && clickedView != card) {
+                        if (clickedView == expensesAreaRef || clickedView == dropdownContentRef) {
+                            // Click originated from expenses area or dropdown content, don't toggle
+                            return;
+                        }
+                        clickedView = (View) clickedView.getParent();
+                    }
+                    
+                    // Click was on the card itself (not on expenses area or dropdown), toggle dropdown
                     if (dropdownContent.getVisibility() == View.VISIBLE) {
                         dropdownContent.setVisibility(View.GONE);
                     } else {
@@ -486,7 +525,9 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
                             if (success) {
                                 confirmTripFromDashboard(trip, targetStatus, actionLabel);
                             } else {
-                                Toast.makeText(DashboardActivity.this, "Submit expenses first (upload failed)", Toast.LENGTH_LONG).show();
+                                // Error message is already shown by ExpenseManager (e.g., "Please upload at least one receipt image")
+                                // Only show generic error if it's a different failure
+                                android.util.Log.d("DashboardActivity", "Expense submission failed");
                             }
                         });
                     } else {
@@ -514,6 +555,9 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
             });
 
             activeTripsContainer.addView(card);
+            if (trip.tripID != null) {
+                renderedTripIds.add(trip.tripID);
+            }
         }
     }
 
@@ -687,6 +731,18 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
         LinearLayout expensesArea = card.findViewById(R.id.expensesArea);
         if (expensesArea == null) return;
 
+        // Prevent click events from expenses area from propagating to card's onClickListener
+        // This prevents the card dropdown from toggling when clicking inside expenses area
+        expensesArea.setClickable(true);
+        expensesArea.setFocusable(true);
+        expensesArea.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Consume the click event to prevent it from propagating to the card
+                // This prevents the dropdown from toggling when clicking inside expenses area
+            }
+        });
+
         // Get trip ID from the card (you may need to adjust this based on your data structure)
         TextView tripIdText = card.findViewById(R.id.tripIdText);
         String tripId = tripIdText != null ? tripIdText.getText().toString() : "unknown";
@@ -702,6 +758,10 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
         
         // Handle image picker result
         if (requestCode == 1001) { // REQUEST_IMAGE_PICK
+            // Set flag to prevent trips refresh in onResume
+            // This prevents the card dropdown from closing when returning from image picker
+            isHandlingImagePicker = true;
+            
             if (expenseManager != null) {
                 expenseManager.handleImagePickerResult(requestCode, resultCode, data);
             } else {
@@ -817,11 +877,27 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
         }
     }
 
+    // Flag to track if we're handling an image picker result
+    // This prevents trips from being refreshed when returning from image picker
+    private boolean isHandlingImagePicker = false;
+    
     @Override
     protected void onResume() {
         super.onResume();
-        // Refresh active trips when activity resumes
-        fetchActiveTrips();
+        // Only refresh active trips if we're not handling an image picker result
+        // This prevents the card dropdown from closing when returning from image picker
+        if (!isHandlingImagePicker) {
+            // Refresh active trips when activity resumes
+            fetchActiveTrips();
+        } else {
+            // Reset flag after a short delay to allow normal refresh on next resume
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    isHandlingImagePicker = false;
+                }
+            }, 500); // 500ms delay
+        }
         // Resume heartbeat when app becomes active
         startHeartbeat();
         // Resume message icon polling

@@ -55,7 +55,7 @@ public class TripAdapter extends RecyclerView.Adapter<TripAdapter.TripViewHolder
     
     private void setupExpensesArea(TripViewHolder holder) {
         // Setup dropdown adapter
-        String[] expenseTypes = {"Fuel Cost", "Supply Cost", "Other"};
+        String[] expenseTypes = {"Fuel Cost"};
         ArrayAdapter<String> adapter = new ArrayAdapter<>(context, 
             android.R.layout.simple_dropdown_item_1line, expenseTypes);
         holder.expenseTypeDropdown.setAdapter(adapter);

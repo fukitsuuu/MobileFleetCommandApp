@@ -7,6 +7,7 @@ public class Expense {
     private String tripId;
     private String expenseType;
     private double amount;
+    private double fuelConsumption; // Fuel quantity/consumption in liters
     private String receiptImagePath;
     private String description;
     private Date createdAt;
@@ -19,6 +20,18 @@ public class Expense {
         this.tripId = tripId;
         this.expenseType = expenseType;
         this.amount = amount;
+        this.fuelConsumption = 0.0;
+        this.receiptImagePath = receiptImagePath;
+        this.description = description;
+        this.createdAt = new Date();
+        this.status = "PENDING";
+    }
+    
+    public Expense(String tripId, String expenseType, double amount, double fuelConsumption, String receiptImagePath, String description) {
+        this.tripId = tripId;
+        this.expenseType = expenseType;
+        this.amount = amount;
+        this.fuelConsumption = fuelConsumption;
         this.receiptImagePath = receiptImagePath;
         this.description = description;
         this.createdAt = new Date();
@@ -38,6 +51,9 @@ public class Expense {
     public double getAmount() { return amount; }
     public void setAmount(double amount) { this.amount = amount; }
     
+    public double getFuelConsumption() { return fuelConsumption; }
+    public void setFuelConsumption(double fuelConsumption) { this.fuelConsumption = fuelConsumption; }
+    
     public String getReceiptImagePath() { return receiptImagePath; }
     public void setReceiptImagePath(String receiptImagePath) { this.receiptImagePath = receiptImagePath; }
     
@@ -56,12 +72,10 @@ public class Expense {
     }
     
     public String getFormattedType() {
-        switch (expenseType) {
-            case "Fuel Cost": return "⛽ Fuel Expenses";
-            case "Supply Cost": return "📦 Supply Expenses";
-            case "Other": return "📋 Other Expenses";
-            default: return expenseType;
+        if ("Fuel Cost".equals(expenseType)) {
+            return "⛽ Fuel Expenses";
         }
+        return expenseType;
     }
     
     public boolean isValid() {

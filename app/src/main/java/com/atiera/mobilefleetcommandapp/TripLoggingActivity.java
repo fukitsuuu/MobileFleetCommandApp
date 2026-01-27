@@ -250,31 +250,12 @@ public class TripLoggingActivity extends DashboardActivity {
                                     label.setText(e.recordDate != null ? e.recordDate : "Expense");
                                     value.setText("₱" + String.format("%.2f", e.fuelCost));
                                     if (typeHeader != null) {
-                                        String t = "Fuel Expenses"; // Default
-                                        if (e.type != null) {
-                                            if (e.type.equalsIgnoreCase("Supply Cost")) {
-                                                t = "Supply Expenses";
-                                            } else if (e.type.equalsIgnoreCase("Other")) {
-                                                t = "Other Expenses";
-                                            } else if (e.type.equalsIgnoreCase("Fuel Cost")) {
-                                                t = "Fuel Expenses";
-                                            }
-                                        }
-                                        typeHeader.setText(t);
+                                        typeHeader.setText("Fuel Expenses");
                                     }
                                     
-                                    // Handle description for Supply Cost and Other expenses
+                                    // Description field is not needed for Fuel Cost only
                                     if (description != null) {
-                                        if (e.type != null && (e.type.equalsIgnoreCase("Supply Cost") || e.type.equalsIgnoreCase("Other"))) {
-                                            if (e.description != null && !e.description.trim().isEmpty()) {
-                                                description.setText(e.description);
-                                                description.setVisibility(View.VISIBLE);
-                                            } else {
-                                                description.setVisibility(View.GONE);
-                                            }
-                                        } else {
-                                            description.setVisibility(View.GONE);
-                                        }
+                                        description.setVisibility(View.GONE);
                                     }
                                     // Render receipt thumbnails if any
                                     if (imagesWrap != null && e.receiptImages != null && !e.receiptImages.isEmpty()) {

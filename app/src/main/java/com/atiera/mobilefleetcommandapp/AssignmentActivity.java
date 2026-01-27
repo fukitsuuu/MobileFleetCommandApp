@@ -30,6 +30,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import com.google.gson.Gson;
 
 // Image picker imports
@@ -232,12 +234,21 @@ public class AssignmentActivity extends DashboardActivity {
         tripsContainer.removeAllViews();
 
         int added = 0;
+        Set<String> seenTripIds = new HashSet<>(); // Track seen trip IDs to prevent duplicates
         for (TripResponse.Trip trip : trips) {
+            // Skip duplicate trip IDs
+            if (trip.tripID != null && seenTripIds.contains(trip.tripID)) {
+                Log.d("AssignmentActivity", "Skipping duplicate trip: " + trip.tripID);
+                continue;
+            }
             // Only show trips with Pending status on Assignment screen
             if (trip.status != null && trip.status.equalsIgnoreCase("pending")) {
                 View tripView = createTripView(trip);
                 tripsContainer.addView(tripView);
                 added++;
+                if (trip.tripID != null) {
+                    seenTripIds.add(trip.tripID);
+                }
             }
         }
 
@@ -266,7 +277,13 @@ public class AssignmentActivity extends DashboardActivity {
         maintenanceContainer.removeAllViews();
 
         int added = 0;
+        Set<String> seenMaintenanceIds = new HashSet<>(); // Track seen maintenance IDs to prevent duplicates
         for (MaintenanceResponse.Maintenance maintenance : maintenanceList) {
+            // Skip duplicate maintenance IDs
+            if (maintenance.maintenanceID != null && seenMaintenanceIds.contains(maintenance.maintenanceID)) {
+                Log.d("AssignmentActivity", "Skipping duplicate maintenance: " + maintenance.maintenanceID);
+                continue;
+            }
             // Only show maintenance that is NOT completed and NOT cancelled on Assignment screen
             if (maintenance.maintenanceStatus != null && 
                 !maintenance.maintenanceStatus.equalsIgnoreCase("completed") &&
@@ -274,6 +291,9 @@ public class AssignmentActivity extends DashboardActivity {
                 View maintenanceView = createMaintenanceView(maintenance);
                 maintenanceContainer.addView(maintenanceView);
                 added++;
+                if (maintenance.maintenanceID != null) {
+                    seenMaintenanceIds.add(maintenance.maintenanceID);
+                }
             }
         }
 
