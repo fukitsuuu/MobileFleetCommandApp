@@ -307,7 +307,13 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
                                 continue;
                             }
                             String s = t.status.toLowerCase();
-                            if (s.equals("preparing") || s.equals("departed") || s.equals("in transit") || s.equals("picked up") || s.equals("delivered")) {
+                            // Treat Trip confirmed and all in-progress states as active for the dashboard
+                            if (s.equals("trip confirmed") ||
+                                s.equals("preparing") ||
+                                s.equals("departed") ||
+                                s.equals("in transit") ||
+                                s.equals("picked up") ||
+                                s.equals("delivered")) {
                                 active.add(t);
                                 if (t.tripID != null) {
                                     seenTripIds.add(t.tripID);
@@ -487,26 +493,42 @@ public class DashboardActivity extends AppCompatActivity implements NavigationVi
                 }
             });
 
-            // Configure confirm button label and behavior based on status (same mapping as Assignment)
+            // Configure confirm button label and behavior based on status
+            // Flow (same as AssignmentActivity):
+            //   Confirm Trip      → Trip confirmed
+            //   Confirm Pickup    → Picked Up
+            //   Departing         → Departed
+            //   Confirm Delivery  → Delivered
+            //   Mark as done      → Completed
             String currentStatus = trip.status != null ? trip.status : "";
             String lower = currentStatus.toLowerCase();
             String buttonLabel = "Confirm Trip";
             String nextStatus = null;
             if (lower.equals("pending")) {
                 buttonLabel = "Confirm Trip";
-                nextStatus = "Preparing";
-            } else if (lower.equals("preparing")) {
-                buttonLabel = "Ready";
-                nextStatus = "Departed";
-            } else if (lower.equals("departed")) {
-                buttonLabel = "Confirm Pick Up";
+                nextStatus = "Trip confirmed";
+            } else if (lower.equals("trip confirmed")) {
+                buttonLabel = "Confirm Pickup";
                 nextStatus = "Picked Up";
             } else if (lower.equals("picked up")) {
+                buttonLabel = "Departing";
+                nextStatus = "Departed";
+            } else if (lower.equals("departed")) {
                 buttonLabel = "Confirm Delivery";
                 nextStatus = "Delivered";
             } else if (lower.equals("delivered")) {
                 buttonLabel = "Mark as done";
                 nextStatus = "Completed";
+                // Initially disable Mark as done until at least one expense is added
+                if (expenseManager != null) {
+                    boolean hasExpenses = expenseManager.hasExpenses();
+                    confirmButton.setEnabled(hasExpenses);
+                    confirmButton.setAlpha(hasExpenses ? 1f : 0.5f);
+                    expenseManager.setExpensesChangedListener(hasAny -> {
+                        confirmButton.setEnabled(hasAny);
+                        confirmButton.setAlpha(hasAny ? 1f : 0.5f);
+                    });
+                }
             } else if (lower.equals("completed")) {
                 buttonLabel = "Completed";
                 nextStatus = null;

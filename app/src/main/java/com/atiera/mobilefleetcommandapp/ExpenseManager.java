@@ -63,6 +63,10 @@ public class ExpenseManager {
     private Uri cameraImageUri = null;
     private boolean isDropdownOpen = false;
     
+    // Listener so screens (e.g., Dashboard) can react when expenses are added/removed
+    public interface ExpensesChangedListener { void onExpensesChanged(boolean hasExpenses); }
+    private ExpensesChangedListener expensesChangedListener;
+    
     public ExpenseManager(Context context) {
         this.context = context;
         this.expenses = new ArrayList<>();
@@ -142,6 +146,8 @@ public class ExpenseManager {
         
         // Initialize add button enabled state
         updateAddButtonEnabled();
+        // Notify initial empty state
+        notifyExpensesChanged();
     }
     
     private void setupDropdown() {
@@ -667,6 +673,8 @@ public class ExpenseManager {
         // Clear form for the next expense (increment form)
         clearForm();
         updateAddButtonEnabled();
+        // Notify listeners that we now have at least one expense
+        notifyExpensesChanged();
         
         // Show success message
         Toast.makeText(context, "Expense added: " + expense.getFormattedType() + " - " + expense.getFormattedAmount(), Toast.LENGTH_SHORT).show();
@@ -1015,6 +1023,8 @@ public class ExpenseManager {
             expensesListContainer.removeView(expenseItem);
             updateTotalDisplay();
             updateAddExpenseButtonText();
+            // Notify listeners after removal
+            notifyExpensesChanged();
             Toast.makeText(context, "Expense removed", Toast.LENGTH_SHORT).show();
         });
         
@@ -1091,6 +1101,19 @@ public class ExpenseManager {
     
     public boolean hasExpenses() {
         return !expenses.isEmpty();
+    }
+
+    // Allow callers to react to expense list changes (e.g., enable/disable buttons)
+    public void setExpensesChangedListener(ExpensesChangedListener listener) {
+        this.expensesChangedListener = listener;
+        // Immediately notify with current state
+        notifyExpensesChanged();
+    }
+
+    private void notifyExpensesChanged() {
+        if (expensesChangedListener != null) {
+            expensesChangedListener.onExpensesChanged(hasExpenses());
+        }
     }
     
     private void updateTotalDisplay() {

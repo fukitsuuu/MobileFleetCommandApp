@@ -241,8 +241,10 @@ public class AssignmentActivity extends DashboardActivity {
                 Log.d("AssignmentActivity", "Skipping duplicate trip: " + trip.tripID);
                 continue;
             }
-            // Only show trips with Pending status on Assignment screen
-            if (trip.status != null && trip.status.equalsIgnoreCase("pending")) {
+
+            // Show trips that are still in-progress for the driver.
+            // Completed trips are moved to Trip Logging screen.
+            if (trip.status != null && !trip.status.equalsIgnoreCase("completed")) {
                 View tripView = createTripView(trip);
                 tripsContainer.addView(tripView);
                 added++;
@@ -422,23 +424,30 @@ public class AssignmentActivity extends DashboardActivity {
         String buttonLabel = "Confirm Trip";
         String nextStatus = null;
         boolean openTripLog = false;
+
+        // Desired button flow:
+        //   Confirm Trip      → Trip confirmed
+        //   Confirm Pickup    → Picked Up
+        //   Departing         → Departed
+        //   Confirm Delivery  → Delivered
+        //   Mark as done      → Completed
         if (lower.equals("pending")) {
             buttonLabel = "Confirm Trip";
-            nextStatus = "Preparing";
-        } else if (lower.equals("preparing")) {
-            buttonLabel = "Ready";
-            nextStatus = "Departed";
-        } else if (lower.equals("departed")) {
-            buttonLabel = "Confirm Pick Up";
+            nextStatus = "Trip confirmed";
+        } else if (lower.equals("trip confirmed")) {
+            buttonLabel = "Confirm Pickup";
             nextStatus = "Picked Up";
         } else if (lower.equals("picked up")) {
+            buttonLabel = "Departing";
+            nextStatus = "Departed";
+        } else if (lower.equals("departed")) {
             buttonLabel = "Confirm Delivery";
             nextStatus = "Delivered";
         } else if (lower.equals("delivered")) {
             buttonLabel = "Mark as done";
             nextStatus = "Completed";
         } else if (lower.equals("completed")) {
-            // Completed trips: no dropdown and button opens Trip Logging screen
+            // Completed trips: no further status updates; let user open Trip Log instead
             buttonLabel = "Open Trip Log";
             nextStatus = null;
             openTripLog = true;
