@@ -500,6 +500,80 @@
 
                 </LinearLayout>
 
+                <!-- Receipt Serial Number -->
+                <LinearLayout
+                    android:id="@+id/serialNumberContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="12dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Receipt Serial Number"
+                        android:textColor="#6B7280"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="4dp" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Enter serial number"
+                        app:boxStrokeColor="#D1D5DB"
+                        app:hintTextColor="#6B7280">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/serialNumberInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:textSize="14sp"
+                            android:textColor="#9CA3AF" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </LinearLayout>
+
+                <!-- Invoice Date -->
+                <LinearLayout
+                    android:id="@+id/invoiceDateContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="12dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Invoice Date"
+                        android:textColor="#6B7280"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="4dp" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="YYYY-MM-DD"
+                        app:boxStrokeColor="#D1D5DB"
+                        app:hintTextColor="#6B7280">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/invoiceDateInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="date"
+                            android:textSize="14sp"
+                            android:textColor="#9CA3AF" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </LinearLayout>
+
                 <!-- Quantity Input (liters) -->
                 <LinearLayout
                     android:id="@+id/fuelConsumptionContainer"

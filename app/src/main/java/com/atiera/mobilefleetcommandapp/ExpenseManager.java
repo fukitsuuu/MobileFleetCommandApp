@@ -2,6 +2,8 @@ package com.atiera.mobilefleetcommandapp;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -31,6 +33,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Calendar;
+import java.text.SimpleDateFormat;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -59,6 +63,10 @@ public class ExpenseManager {
     private LinearLayout receiptImagesContainer;
     private LinearLayout descriptionContainer;
     private TextInputEditText descriptionInput;
+    private LinearLayout serialNumberContainer;
+    private TextInputEditText serialNumberInput;
+    private LinearLayout invoiceDateContainer;
+    private TextInputEditText invoiceDateInput;
     
     // Expense types
     private String[] expenseTypes = {"Fuel Cost"};
@@ -99,6 +107,10 @@ public class ExpenseManager {
         receiptImagesContainer = card.findViewById(R.id.receiptImagesContainer);
         descriptionContainer = card.findViewById(R.id.descriptionContainer);
         descriptionInput = card.findViewById(R.id.descriptionInput);
+        serialNumberContainer = card.findViewById(R.id.serialNumberContainer);
+        serialNumberInput = card.findViewById(R.id.serialNumberInput);
+        invoiceDateContainer = card.findViewById(R.id.invoiceDateContainer);
+        invoiceDateInput = card.findViewById(R.id.invoiceDateInput);
         
         // Debug: Check if description field is found
         android.util.Log.d("ExpenseManager", "Description field found - container: " + (descriptionContainer != null) + ", input: " + (descriptionInput != null));
@@ -126,6 +138,13 @@ public class ExpenseManager {
         
         // Setup cost amount input styling
         setupCostAmountInput();
+
+        // Setup invoice date picker (date + time)
+        if (invoiceDateInput != null) {
+            invoiceDateInput.setFocusable(false);
+            invoiceDateInput.setClickable(true);
+            invoiceDateInput.setOnClickListener(v -> showInvoiceDateTimePicker());
+        }
         
         // Create expenses list container if it doesn't exist
         createExpensesListContainer();
@@ -136,12 +155,15 @@ public class ExpenseManager {
             android.util.Log.d("ExpenseManager", "Expenses area set to visible");
         }
         
-        // Initially hide description field (it will be shown when Supply Cost or Other is selected)
+        // Initially hide fields that are only for certain expense types
         if (descriptionContainer != null) {
             descriptionContainer.setVisibility(View.GONE);
-            android.util.Log.d("ExpenseManager", "Description field initially hidden - visibility: " + descriptionContainer.getVisibility());
-        } else {
-            android.util.Log.e("ExpenseManager", "Description container is NULL - cannot hide description field!");
+        }
+        if (serialNumberContainer != null) {
+            serialNumberContainer.setVisibility(View.GONE);
+        }
+        if (invoiceDateContainer != null) {
+            invoiceDateContainer.setVisibility(View.GONE);
         }
         
         // Check if there's already a selected expense type and adjust description visibility
@@ -242,16 +264,24 @@ public class ExpenseManager {
     }
     
     private void showDescriptionField(String expenseType) {
-        if (descriptionContainer == null) return;
+        boolean show = "Fuel Cost".equalsIgnoreCase(expenseType);
 
-        // For Fuel Cost we want to show the description box
-        if ("Fuel Cost".equalsIgnoreCase(expenseType)) {
-            descriptionContainer.setVisibility(View.VISIBLE);
-        } else {
-            descriptionContainer.setVisibility(View.GONE);
-            // Clear description when hidden
-            if (descriptionInput != null) {
+        if (descriptionContainer != null) {
+            descriptionContainer.setVisibility(show ? View.VISIBLE : View.GONE);
+            if (!show && descriptionInput != null) {
                 descriptionInput.setText("");
+            }
+        }
+        if (serialNumberContainer != null) {
+            serialNumberContainer.setVisibility(show ? View.VISIBLE : View.GONE);
+            if (!show && serialNumberInput != null) {
+                serialNumberInput.setText("");
+            }
+        }
+        if (invoiceDateContainer != null) {
+            invoiceDateContainer.setVisibility(show ? View.VISIBLE : View.GONE);
+            if (!show && invoiceDateInput != null) {
+                invoiceDateInput.setText("");
             }
         }
     }
@@ -672,10 +702,18 @@ public class ExpenseManager {
         if (descriptionInput != null) {
             description = descriptionInput.getText().toString().trim();
         }
+        String serialNumber = "";
+        if (serialNumberInput != null) {
+            serialNumber = serialNumberInput.getText().toString().trim();
+        }
+        String invoiceDate = "";
+        if (invoiceDateInput != null) {
+            invoiceDate = invoiceDateInput.getText().toString().trim();
+        }
         
         // Create new expense with image paths (comma-separated)
         String imagePaths = String.join(",", selectedImagePaths);
-        Expense expense = new Expense(currentTripId, expenseType, amount, fuelConsumption, imagePaths, description);
+        Expense expense = new Expense(currentTripId, expenseType, amount, fuelConsumption, imagePaths, description, serialNumber, invoiceDate);
         expenses.add(expense);
         
         // Add to UI (do NOT post yet; posting happens on Mark as done)
@@ -731,8 +769,16 @@ public class ExpenseManager {
                 if (descriptionInput != null) {
                     description = descriptionInput.getText().toString().trim();
                 }
+                String serialNumber = "";
+                if (serialNumberInput != null) {
+                    serialNumber = serialNumberInput.getText().toString().trim();
+                }
+                String invoiceDate = "";
+                if (invoiceDateInput != null) {
+                    invoiceDate = invoiceDateInput.getText().toString().trim();
+                }
                 android.util.Log.d("ExpenseManager", "submitAllExpensesForTrip - Creating expense with fuel_consumption: " + fuelConsumption);
-                toSubmit.add(new Expense(currentTripId, type, amount, fuelConsumption, imagePaths, description));
+                toSubmit.add(new Expense(currentTripId, type, amount, fuelConsumption, imagePaths, description, serialNumber, invoiceDate));
             } catch (Exception ignored) {}
         }
         
@@ -794,6 +840,9 @@ public class ExpenseManager {
                 payload.put("fuel_consumption", fuelConsumptionValue);
                 android.util.Log.d("ExpenseManager", "Sending fuel_consumption (non-callback): " + fuelConsumptionValue + " for trip: " + expense.getTripId());
                 payload.put("description", expense.getDescription());
+                // New fields for receipt serial number and invoice date
+                payload.put("serial_number", expense.getSerialNumber());
+                payload.put("invoice_date", expense.getInvoiceDate());
                 // Attach base64 contents of all selected images
                 org.json.JSONArray imagesArray = new org.json.JSONArray();
                 try {
@@ -866,6 +915,9 @@ public class ExpenseManager {
                 payload.put("fuel_consumption", fuelConsumptionValue);
                 android.util.Log.d("ExpenseManager", "Sending fuel_consumption (callback): " + fuelConsumptionValue + " for trip: " + expense.getTripId());
                 payload.put("description", expense.getDescription());
+                // New fields for receipt serial number and invoice date
+                payload.put("serial_number", expense.getSerialNumber());
+                payload.put("invoice_date", expense.getInvoiceDate());
 
                 // Build base64 images array (same as non-callback method) so server saves to database/receipts
                 org.json.JSONArray imagesArray = new org.json.JSONArray();
@@ -1063,9 +1115,9 @@ public class ExpenseManager {
         if (fuelConsumptionInput != null) {
             fuelConsumptionInput.setText("");
         }
-        if (descriptionInput != null) {
-            descriptionInput.setText("");
-        }
+        if (descriptionInput != null) { descriptionInput.setText(""); }
+        if (serialNumberInput != null) { serialNumberInput.setText(""); }
+        if (invoiceDateInput != null) { invoiceDateInput.setText(""); }
         if (selectedImagesContainer != null) {
             selectedImagesContainer.removeAllViews();
         }
@@ -1165,7 +1217,15 @@ public class ExpenseManager {
         if (descriptionInput != null) {
             description = descriptionInput.getText().toString().trim();
         }
-        Expense expense = new Expense(currentTripId, expenseType, amount, fuelConsumption, imagePaths, description);
+        String serialNumber = "";
+        if (serialNumberInput != null) {
+            serialNumber = serialNumberInput.getText().toString().trim();
+        }
+        String invoiceDate = "";
+        if (invoiceDateInput != null) {
+            invoiceDate = invoiceDateInput.getText().toString().trim();
+        }
+        Expense expense = new Expense(currentTripId, expenseType, amount, fuelConsumption, imagePaths, description, serialNumber, invoiceDate);
         expenses.add(expense);
         addExpenseToUI(expense);
         // Submit all expense types
@@ -1201,7 +1261,15 @@ public class ExpenseManager {
         if (descriptionInput != null) {
             description = descriptionInput.getText().toString().trim();
         }
-        Expense expense = new Expense(currentTripId, type, amount, fuelConsumption, imagePaths, description);
+        String serialNumber = "";
+        if (serialNumberInput != null) {
+            serialNumber = serialNumberInput.getText().toString().trim();
+        }
+        String invoiceDate = "";
+        if (invoiceDateInput != null) {
+            invoiceDate = invoiceDateInput.getText().toString().trim();
+        }
+        Expense expense = new Expense(currentTripId, type, amount, fuelConsumption, imagePaths, description, serialNumber, invoiceDate);
         // Try posting; only proceed on success
         postFuelExpense(expense, success -> {
             if (success) {
@@ -1255,8 +1323,26 @@ public class ExpenseManager {
 
                     // Auto-fill description if detected (e.g., XCS, Xtra Advance)
                     if (body.description != null && descriptionInput != null) {
-                        descriptionContainer.setVisibility(View.VISIBLE);
+                        if (descriptionContainer != null) {
+                            descriptionContainer.setVisibility(View.VISIBLE);
+                        }
                         descriptionInput.setText(body.description);
+                    }
+
+                    // Auto-fill serial number if detected
+                    if (body.serialNumber != null && serialNumberInput != null) {
+                        if (serialNumberContainer != null) {
+                            serialNumberContainer.setVisibility(View.VISIBLE);
+                        }
+                        serialNumberInput.setText(body.serialNumber);
+                    }
+
+                    // Auto-fill invoice date if detected
+                    if (body.invoiceDate != null && invoiceDateInput != null) {
+                        if (invoiceDateContainer != null) {
+                            invoiceDateContainer.setVisibility(View.VISIBLE);
+                        }
+                        invoiceDateInput.setText(body.invoiceDate);
                     }
 
                     // Re-evaluate form completeness so "Add Expenses" / "Mark as done" can be enabled
@@ -1271,6 +1357,43 @@ public class ExpenseManager {
         } catch (Exception e) {
             Toast.makeText(context, "Error preparing receipt for analysis", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    // Show a combined date + time picker for invoice date
+    private void showInvoiceDateTimePicker() {
+        final Calendar calendar = Calendar.getInstance();
+
+        DatePickerDialog datePicker = new DatePickerDialog(
+                (Activity) context,
+                (view, year, month, dayOfMonth) -> {
+                    calendar.set(Calendar.YEAR, year);
+                    calendar.set(Calendar.MONTH, month);
+                    calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
+
+                    TimePickerDialog timePicker = new TimePickerDialog(
+                            (Activity) context,
+                            (timeView, hourOfDay, minute) -> {
+                                calendar.set(Calendar.HOUR_OF_DAY, hourOfDay);
+                                calendar.set(Calendar.MINUTE, minute);
+
+                                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.US);
+                                String formatted = sdf.format(calendar.getTime());
+                                if (invoiceDateInput != null) {
+                                    invoiceDateInput.setText(formatted);
+                                }
+                            },
+                            calendar.get(Calendar.HOUR_OF_DAY),
+                            calendar.get(Calendar.MINUTE),
+                            true
+                    );
+                    timePicker.show();
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+        );
+
+        datePicker.show();
     }
 
 }

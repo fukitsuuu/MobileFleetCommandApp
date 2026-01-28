@@ -10,6 +10,8 @@ public class Expense {
     private double fuelConsumption; // Fuel quantity/consumption in liters
     private String receiptImagePath;
     private String description;
+    private String serialNumber;
+    private String invoiceDate;
     private Date createdAt;
     private String status; // PENDING, APPROVED, REJECTED
     
@@ -23,17 +25,21 @@ public class Expense {
         this.fuelConsumption = 0.0;
         this.receiptImagePath = receiptImagePath;
         this.description = description;
+        this.serialNumber = "";
+        this.invoiceDate = "";
         this.createdAt = new Date();
         this.status = "PENDING";
     }
     
-    public Expense(String tripId, String expenseType, double amount, double fuelConsumption, String receiptImagePath, String description) {
+    public Expense(String tripId, String expenseType, double amount, double fuelConsumption, String receiptImagePath, String description, String serialNumber, String invoiceDate) {
         this.tripId = tripId;
         this.expenseType = expenseType;
         this.amount = amount;
         this.fuelConsumption = fuelConsumption;
         this.receiptImagePath = receiptImagePath;
         this.description = description;
+        this.serialNumber = serialNumber;
+        this.invoiceDate = invoiceDate;
         this.createdAt = new Date();
         this.status = "PENDING";
     }
@@ -59,6 +65,12 @@ public class Expense {
     
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+    
+    public String getSerialNumber() { return serialNumber; }
+    public void setSerialNumber(String serialNumber) { this.serialNumber = serialNumber; }
+    
+    public String getInvoiceDate() { return invoiceDate; }
+    public void setInvoiceDate(String invoiceDate) { this.invoiceDate = invoiceDate; }
     
     public Date getCreatedAt() { return createdAt; }
     public void setCreatedAt(Date createdAt) { this.createdAt = createdAt; }
