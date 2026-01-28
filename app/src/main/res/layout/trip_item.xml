@@ -404,123 +404,7 @@
 
                 </LinearLayout>
 
-                <!-- Cost Amount Input -->
-                <LinearLayout
-                    android:id="@+id/costAmountContainer"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginBottom="12dp"
-                    android:visibility="gone">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Cost Amount"
-                        android:textColor="#6B7280"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="4dp" />
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="Enter amount"
-                        app:boxStrokeColor="#D1D5DB"
-                        app:hintTextColor="#6B7280"
-                        app:prefixText="₱"
-                        app:prefixTextColor="#9CA3AF">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/costAmountInput"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="numberDecimal"
-                            android:textSize="14sp"
-                            android:textColor="#9CA3AF" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                </LinearLayout>
-
-                <!-- Fuel Consumption Input (for Fuel Cost) -->
-                <LinearLayout
-                    android:id="@+id/fuelConsumptionContainer"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginBottom="12dp"
-                    android:visibility="gone">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Fuel Consumption"
-                        android:textColor="#6B7280"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="4dp" />
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="Enter fuel quantity"
-                        app:boxStrokeColor="#D1D5DB"
-                        app:hintTextColor="#6B7280"
-                        app:suffixText="L"
-                        app:suffixTextColor="#9CA3AF">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/fuelConsumptionInput"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="numberDecimal"
-                            android:textSize="14sp"
-                            android:textColor="#9CA3AF" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                </LinearLayout>
-
-                <!-- Description Input (for Supply Cost and Other) -->
-                <LinearLayout
-                    android:id="@+id/descriptionContainer"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginBottom="12dp"
-                    android:visibility="gone">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Description"
-                        android:textColor="#6B7280"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="4dp" />
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="Enter description"
-                        app:boxStrokeColor="#D1D5DB"
-                        app:hintTextColor="#6B7280">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/descriptionInput"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="textMultiLine"
-                            android:maxLines="3"
-                            android:textSize="14sp"
-                            android:textColor="#9CA3AF" />
-
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                </LinearLayout>
-
-                <!-- Receipt Image Upload -->
+                <!-- Receipt Image Upload (first: image button + thumbnails) -->
                 <LinearLayout
                     android:id="@+id/receiptImagesContainer"
                     android:layout_width="match_parent"
@@ -575,6 +459,122 @@
                         </LinearLayout>
 
                     </HorizontalScrollView>
+
+                </LinearLayout>
+
+                <!-- Description Input -->
+                <LinearLayout
+                    android:id="@+id/descriptionContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="12dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Description"
+                        android:textColor="#6B7280"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="4dp" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Enter description"
+                        app:boxStrokeColor="#D1D5DB"
+                        app:hintTextColor="#6B7280">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/descriptionInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="textMultiLine"
+                            android:maxLines="3"
+                            android:textSize="14sp"
+                            android:textColor="#9CA3AF" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </LinearLayout>
+
+                <!-- Quantity Input (liters) -->
+                <LinearLayout
+                    android:id="@+id/fuelConsumptionContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="12dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Quantity (Liters)"
+                        android:textColor="#6B7280"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="4dp" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Enter quantity"
+                        app:boxStrokeColor="#D1D5DB"
+                        app:hintTextColor="#6B7280"
+                        app:suffixText="L"
+                        app:suffixTextColor="#9CA3AF">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/fuelConsumptionInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="numberDecimal"
+                            android:textSize="14sp"
+                            android:textColor="#9CA3AF" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </LinearLayout>
+
+                <!-- Cost Amount Input (last) -->
+                <LinearLayout
+                    android:id="@+id/costAmountContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginBottom="12dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Cost Amount"
+                        android:textColor="#6B7280"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="4dp" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:hint="Enter amount"
+                        app:boxStrokeColor="#D1D5DB"
+                        app:hintTextColor="#6B7280"
+                        app:prefixText="₱"
+                        app:prefixTextColor="#9CA3AF">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/costAmountInput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="numberDecimal"
+                            android:textSize="14sp"
+                            android:textColor="#9CA3AF" />
+
+                    </com.google.android.material.textfield.TextInputLayout>
 
                 </LinearLayout>
 

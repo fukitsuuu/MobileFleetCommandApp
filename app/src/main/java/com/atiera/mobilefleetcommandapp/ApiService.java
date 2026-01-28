@@ -173,6 +173,13 @@ public interface ApiService {
             @Field("peer") String peer
     );
 
+    // Analyze a receipt image with Google Cloud Vision (backend integration)
+    @FormUrlEncoded
+    @POST("analyze_receipt.php")
+    Call<ReceiptAnalysisResponse> analyzeReceipt(
+            @Field("image_base64") String imageBase64
+    );
+
 }
 
 

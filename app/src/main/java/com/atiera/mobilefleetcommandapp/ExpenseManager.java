@@ -9,6 +9,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.util.Base64;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
@@ -17,16 +18,23 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import java.util.ArrayList;
 import androidx.core.content.FileProvider;
+
 import com.google.android.material.textfield.TextInputEditText;
+
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class ExpenseManager {
     
@@ -148,6 +156,8 @@ public class ExpenseManager {
         updateAddButtonEnabled();
         // Notify initial empty state
         notifyExpensesChanged();
+        // Notify initial empty state
+        notifyExpensesChanged();
     }
     
     private void setupDropdown() {
@@ -232,8 +242,12 @@ public class ExpenseManager {
     }
     
     private void showDescriptionField(String expenseType) {
-        // Description field is always hidden since only "Fuel Cost" is available
-        if (descriptionContainer != null) {
+        if (descriptionContainer == null) return;
+
+        // For Fuel Cost we want to show the description box
+        if ("Fuel Cost".equalsIgnoreCase(expenseType)) {
+            descriptionContainer.setVisibility(View.VISIBLE);
+        } else {
             descriptionContainer.setVisibility(View.GONE);
             // Clear description when hidden
             if (descriptionInput != null) {
@@ -477,6 +491,9 @@ public class ExpenseManager {
         // Force refresh the container
         selectedImagesContainer.invalidate();
         selectedImagesContainer.requestLayout();
+
+        // After successfully adding an image, try to analyze the receipt with AI
+        analyzeReceiptWithAI(bitmap);
     }
 
     private void showImagePreview(String imagePath) {
@@ -1106,7 +1123,6 @@ public class ExpenseManager {
     // Allow callers to react to expense list changes (e.g., enable/disable buttons)
     public void setExpensesChangedListener(ExpensesChangedListener listener) {
         this.expensesChangedListener = listener;
-        // Immediately notify with current state
         notifyExpensesChanged();
     }
 
@@ -1115,7 +1131,7 @@ public class ExpenseManager {
             expensesChangedListener.onExpensesChanged(hasExpenses());
         }
     }
-    
+
     private void updateTotalDisplay() {
         if (totalExpensesContainer == null || totalExpensesText == null) return;
         
@@ -1198,4 +1214,63 @@ public class ExpenseManager {
             if (callback != null) callback.onResult(success);
         });
     }
+
+    // ---- AI-powered receipt analysis ----
+
+    private void analyzeReceiptWithAI(Bitmap bitmap) {
+        if (bitmap == null) return;
+
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, baos);
+            byte[] bytes = baos.toByteArray();
+            String base64 = Base64.encodeToString(bytes, Base64.NO_WRAP);
+
+            ApiClient.get().analyzeReceipt(base64).enqueue(new Callback<ReceiptAnalysisResponse>() {
+                @Override
+                public void onResponse(Call<ReceiptAnalysisResponse> call, Response<ReceiptAnalysisResponse> response) {
+                    if (!response.isSuccessful() || response.body() == null) {
+                        Toast.makeText(context, "Could not analyze receipt (server error)", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    ReceiptAnalysisResponse body = response.body();
+                    if (!body.ok) {
+                        // Only show a toast if backend explicitly reports an error
+                        if (body.msg != null && !body.msg.isEmpty()) {
+                            Toast.makeText(context, body.msg, Toast.LENGTH_SHORT).show();
+                        }
+                        return;
+                    }
+
+                    // Auto-fill amount if detected
+                    if (body.amount != null && costAmountInput != null) {
+                        costAmountInput.setText(String.format(java.util.Locale.US, "%.2f", body.amount));
+                    }
+
+                    // Auto-fill fuel liters if detected
+                    if (body.fuelLiters != null && fuelConsumptionInput != null) {
+                        // Use up to 2 decimal places
+                        fuelConsumptionInput.setText(String.format(java.util.Locale.US, "%.2f", body.fuelLiters));
+                    }
+
+                    // Auto-fill description if detected (e.g., XCS, Xtra Advance)
+                    if (body.description != null && descriptionInput != null) {
+                        descriptionContainer.setVisibility(View.VISIBLE);
+                        descriptionInput.setText(body.description);
+                    }
+
+                    // Re-evaluate form completeness so "Add Expenses" / "Mark as done" can be enabled
+                    updateAddButtonEnabled();
+                }
+
+                @Override
+                public void onFailure(Call<ReceiptAnalysisResponse> call, Throwable t) {
+                    Toast.makeText(context, "Could not analyze receipt", Toast.LENGTH_SHORT).show();
+                }
+            });
+        } catch (Exception e) {
+            Toast.makeText(context, "Error preparing receipt for analysis", Toast.LENGTH_SHORT).show();
+        }
+    }
+
 }
